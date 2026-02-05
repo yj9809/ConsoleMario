@@ -1,0 +1,46 @@
+Natural Accel/Decel Example (Concept Only)
+
+Goal
+- Make movement feel like it smoothly speeds up and slows down.
+- Avoid instant stop and instant reverse at full speed.
+
+State (per player)
+- positionX (float)
+- velocityX (float)
+- accel (float)
+- decel (float)
+- maxSpeed (float)
+
+Per-frame update (pseudo flow)
+1) Read input direction
+   - dir = +1 for Right, -1 for Left, 0 for none
+
+2) Apply acceleration or deceleration
+   - if dir != 0:
+       velocityX += dir * accel * dt
+     else:
+       // apply friction toward 0
+       if velocityX > 0: velocityX = max(0, velocityX - decel * dt)
+       if velocityX < 0: velocityX = min(0, velocityX + decel * dt)
+
+3) Clamp speed
+   - velocityX = clamp(velocityX, -maxSpeed, +maxSpeed)
+
+4) Integrate position
+   - positionX += velocityX * dt
+
+5) Convert to tile/screen position if needed
+   - screenX = int(positionX)
+
+Notes
+- accel controls how fast you gain speed while holding a key.
+- decel controls how quickly you slow down after releasing.
+- Use higher decel than accel if you want snappy stop.
+- For one-way camera (right-only), clamp cameraX to never decrease.
+
+Example tuning (feel-based)
+- accel: 30 to 80
+- decel: 40 to 120
+- maxSpeed: 8 to 18 (tile units/sec)
+
+This is a conceptual guide; adapt to your current variables and style.
