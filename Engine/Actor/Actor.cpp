@@ -24,6 +24,7 @@ namespace Wanted
 	{
 		// 메모리 해제.
 		SafeDeleteArray(image);
+		SafeDelete(owner);
 	}
 
 	void Actor::BeginPlay()

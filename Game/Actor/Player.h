@@ -4,6 +4,7 @@
 #include "Level/Level.h"
 #include "Util/Util.h"
 
+#include "Interface/ICanPlayerMove.h"
 using namespace Wanted;
 
 class Player : public Actor
@@ -21,7 +22,7 @@ private:
 	void MoveLeft(float deltaTime);
 
 	void Jump(float deltaTime);
-	void Fall(float deltaTime);
+	void Fall();
 
 	// 가속도 설정 함수.
 	inline void SetWeight(float& weight, float deltaTime)
@@ -33,6 +34,9 @@ private:
 	}
 
 private:
+	ICanPlayerMove* canPlayerMove = nullptr;
+
+	// 이동 속도 변수
 	float moveSpeed = 25.0f;
 
 	// 가속도 변수.

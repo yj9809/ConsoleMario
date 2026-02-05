@@ -2,14 +2,12 @@
 #include "Engine/Engine.h"
 #include "Core/Input.h"
 
-#include "Interface/ICanPlayerMove.h"
-
 #define RIGHT_KEY (Input::Get().GetKey(VK_RIGHT))
 #define LEFT_KEY (Input::Get().GetKey(VK_LEFT))
 #define SPACE_DOWN (Input::Get().GetKeyDown(VK_SPACE))
 
 Player::Player()
-	: super("MM", Vector2(0, 21), Color::Red), yPosition(position.y)
+	: super("MMMMM", Vector2(0, 21), Color::Red), yPosition(position.y)
 {
 	sortingOrder = 10;
 }
@@ -18,9 +16,16 @@ void Player::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 
+	if (!canPlayerMove)
+	{
+		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
+	}
+
 	Move(deltaTime);
 
-	if (!isJumping && SPACE_DOWN) 
+	Fall();
+
+	if (!isJumping && SPACE_DOWN)
 	{
 		isJumping = true;
 
@@ -68,20 +73,17 @@ void Player::MoveRight(float deltaTime)
 {
 	xPosition += (moveSpeed + weight) * deltaTime;
 
-	static ICanPlayerMove* canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
-
-	Vector2 nextPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
-	if (!canPlayerMove->CanMove(Vector2(position.x + width / 2, position.y), nextPosition))
+	Vector2 nextPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition));
+	if (!canPlayerMove->CanMove(Vector2(position.x + width - 1, position.y), nextPosition))
 	{
 		xPosition = position.x;
 	}
 
-	if (xPosition > Engine::Get().GetWidth() - width)
+	if (xPosition + width > Engine::Get().GetWidth())
 	{
 		xPosition = static_cast<float>(Engine::Get().GetWidth() - width);
 	}
-
-	SetPosition(nextPosition);
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
 
 void Player::MoveLeft(float deltaTime)
@@ -93,6 +95,12 @@ void Player::MoveLeft(float deltaTime)
 		xPosition = 0.0f;
 	}
 
+	Vector2 nextPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
+	if (!canPlayerMove->CanMove(Vector2(position.x, static_cast<int>(yPosition)), nextPosition))
+	{
+		xPosition = position.x;
+	}
+
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
 
@@ -100,8 +108,6 @@ void Player::Jump(float deltaTime)
 {
 	if (!isJumping)
 		return;
-
-	static ICanPlayerMove* canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
 
 	// 프레임마다 중력(가속도)을 속도에 누적한다.
 	// velocityY는 시간이 지날수록 증가하며(아래 방향), 상승 중(음수)에는 0으로 수렴하고
@@ -111,13 +117,14 @@ void Player::Jump(float deltaTime)
 	// 위치 업데이트.
 	yPosition += velocityY * deltaTime;
 
-	Vector2 nextPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
+	// 충돌 체크를 위한 다음 프레임의 좌측/우측 위치 계산.
+	Vector2 nextLeftPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
+	Vector2 nextRightPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition));
 
-	// Todo: 충돌 로직이 완성되지 않았기 때문에 임시로 땅 높이를 20.0f로 고정.
 	// 지면에 닿으면 위치/속도를 보정하고 점프 상태를 해제한다.
-	if (!canPlayerMove->CanMove(position, nextPosition))
+	if (!canPlayerMove->CanMove(position, nextLeftPosition) || !canPlayerMove->CanMove(Vector2(position.x + width - 1, position.y), nextRightPosition))
 	{
-		if (velocityY > 0)
+		if (velocityY > 0.0f)
 		{
 			// 땅에 착지했으므로 위치 보정.
 			yPosition = position.y;
@@ -137,4 +144,20 @@ void Player::Jump(float deltaTime)
 
 	// 위치 업데이트.
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+}
+
+void Player::Fall()
+{
+	if (isJumping)
+		return;
+
+	Vector2 LeftDownPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition + 1));
+	Vector2 RightDownPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition + 1));
+	bool isGround = canPlayerMove->IsOnGround(LeftDownPosition) || canPlayerMove->IsOnGround(RightDownPosition);
+	if (!isGround)
+	{
+		isJumping = true;
+		velocityY = 0.0f;
+		yPosition = position.y;
+	}
 }

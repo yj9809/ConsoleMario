@@ -18,6 +18,7 @@ public:
 
 	virtual bool CanMove(const Vector2& playerPosition, const Vector2& nextPosition) override;
 
+	virtual bool IsOnGround(const Vector2& playerDownPosition) override;
 private:
 	void LoadMap(const char* mapFile);
 };

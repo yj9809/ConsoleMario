@@ -47,6 +47,30 @@ bool GameLevel::CanMove(const Vector2& playerPosition, const Vector2& nextPositi
 	return true;
 }
 
+bool GameLevel::IsOnGround(const Vector2& playerDownPosition)
+{
+	// 레벨에 있는 땅 액터 수집.
+	std::vector<Actor*> grounds;
+
+	for (Actor* actor : actors)
+	{
+		if (actor->IsTypeOf<Wall>())
+		{
+			grounds.push_back(actor);
+			continue;
+		}
+	}
+
+	for (Actor* ground : grounds)
+	{
+		if (ground->GetPosition() == playerDownPosition)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void GameLevel::LoadMap(const char* mapFile)
 {
 	char path[2048] = {};

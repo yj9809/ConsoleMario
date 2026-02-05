@@ -11,4 +11,8 @@ public:
 	// playerPosition: 플레이어의 현재 위치.
 	// nextPosition: 플레이어가 이동하려는 위치.
 	virtual bool CanMove(const Wanted::Vector2& playerPosition, const Wanted::Vector2& nextPosition) = 0;
+
+	// 플레이어가 바닥을 밟고 있는지 문의할 때 사용할 함수.
+	// playerDownPosition: 플레이어의 발 밑 위치.
+	virtual bool IsOnGround(const Wanted::Vector2& playerDownPosition) = 0;
 };
