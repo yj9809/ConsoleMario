@@ -1,12 +1,10 @@
 #include <iostream>
 
 #include "GameLevel.h"
-#include "Actor/Goal.h"
-#include "Actor/FakeGoal.h"
+#include "Actor/Ground.h"
 #include "Actor/Wall.h"
 #include "Actor/Player.h"
 #include "Actor/FakeWall.h"
-#include "Actor/Coin.h"
 
 GameLevel::GameLevel()
 {
@@ -23,8 +21,7 @@ void GameLevel::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 
-	ProcessCollisionCoinAndPlayer();
-	ProcessCollisionGoalAndPlayer();
+	PlayerAndWallProcessColision();
 }
 
 void GameLevel::Draw()
@@ -32,11 +29,10 @@ void GameLevel::Draw()
     super::Draw();
 }
 
-void GameLevel::ProcessCollisionCoinAndPlayer()
+void GameLevel::PlayerAndWallProcessColision()
 {
 	Actor* player = nullptr;
-	std::vector<Actor*> coins;
-
+	std::vector<Actor*> walls;
 	for (Actor* const actor : actors)
 	{
 		if (actor->IsTypeOf<Player>())
@@ -45,64 +41,47 @@ void GameLevel::ProcessCollisionCoinAndPlayer()
 			continue;
 		}
 
-		if (actor->IsTypeOf<Coin>())
+		if (actor->IsTypeOf<Wall>())
 		{
-			coins.push_back(actor);
+			walls.push_back(actor);
 			continue;
 		}
 	}
-
-	if (!player || coins.size() == 0)
+	if (!player || walls.empty())
 	{
 		return;
 	}
 
-	for (Actor* const coin : coins)
+	for (Actor* const wall : walls)
 	{
-		if (coin->TestIntersect(player))
+		if (player->TestIntersect(wall))
 		{
-			coin->Destroy();
-			score++;
-			continue;
+			Vector2 playerPos = player->GetPosition();
+			Vector2 wallPos = wall->GetPosition();
+			// 충돌 방향에 따른 위치 보정.
+			if (playerPos.y + player->GetWidth() - 1 >= wallPos.y
+				&& playerPos.y < wallPos.y) // 아래쪽 충돌
+			{
+				player->SetPosition(Vector2(playerPos.x, wallPos.y - player->GetWidth()));
+			}
+			else if (playerPos.y <= wallPos.y + wall->GetWidth() - 1
+				&& playerPos.y > wallPos.y) // 위쪽 충돌
+			{
+				player->SetPosition(Vector2(playerPos.x, wallPos.y + wall->GetWidth()));
+			}
+			else if (playerPos.x + player->GetWidth() - 1 >= wallPos.x
+				&& playerPos.x < wallPos.x) // 오른쪽 충돌
+			{
+				player->SetPosition(Vector2(wallPos.x - player->GetWidth(), playerPos.y));
+			}
+			else if (playerPos.x <= wallPos.x + wall->GetWidth() - 1
+				&& playerPos.x > wallPos.x) // 왼쪽 충돌
+			{
+				player->SetPosition(Vector2(wallPos.x + wall->GetWidth(), playerPos.y));
+			}
 		}
 	}
-}
 
-void GameLevel::ProcessCollisionGoalAndPlayer()
-{
-	Actor* player = nullptr;
-	std::vector<Actor*> goals;
-
-	for (Actor* const actor : actors)
-	{
-		if (actor->IsTypeOf<Player>())
-		{
-			player = actor;
-			continue;
-		}
-
-		if (actor->IsTypeOf<Goal>())
-		{
-			goals.push_back(actor);
-			continue;
-		}
-	}
-
-	if (!player || goals.size() == 0)
-	{
-		return;
-	}
-
-	for (Actor* const goal : goals)
-	{
-		if (goal->TestIntersect(player))
-		{
-			int y = player->GetPosition().y;
-			player->As<Player>()->SetClear();
-			score += 130 - y;
-			continue;
-		}
-	}
 }
 
 bool GameLevel::CanMove(const Vector2& playerPosition, const Vector2& nextPosition)
@@ -208,14 +187,7 @@ void GameLevel::LoadMap(const char* mapFile)
 			AddNewActor(new FakeWall(position));
 			break;
 		case 'G':
-			AddNewActor(new Goal(position));
-			break;
-		case 'g':
-			AddNewActor(new FakeGoal(position));
-			break;
-		case 'C':
-			AddNewActor(new Coin(position));
-			break;
+			AddNewActor(new Ground(position));
 		}
 		++position.x;
 	}

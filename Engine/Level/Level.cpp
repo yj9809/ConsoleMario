@@ -116,6 +116,9 @@ namespace Wanted
 			{
 				// 삭제 처리.
 				delete actors[ix];
+				if (actors.size() <= 0) {
+					continue;
+				}
 				actors.erase(actors.begin() + ix);
 				continue;
 			}

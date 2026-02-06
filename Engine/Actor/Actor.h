@@ -83,6 +83,9 @@ namespace Wanted
 		// 문자열 길이.
 		int width = 0;
 
+		// 문자열 높이.
+		int height = 1;
+
 		// 색상.
 		Color color = Color::White;
 
@@ -96,3 +99,4 @@ namespace Wanted
 		Vector2 position;
 	};
 }
+

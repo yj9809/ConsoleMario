@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -143,16 +143,20 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Actor\Coin.cpp" />
+    <ClCompile Include="Actor\FakeGoal.cpp" />
     <ClCompile Include="Actor\FakeWall.cpp" />
-    <ClCompile Include="Actor\Ground.cpp" />
+    <ClCompile Include="Actor\Goal.cpp" />
     <ClCompile Include="Actor\Player.cpp" />
     <ClCompile Include="Actor\Wall.cpp" />
     <ClCompile Include="Level\GameLevel.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor\Coin.h" />
+    <ClInclude Include="Actor\FakeGoal.h" />
     <ClInclude Include="Actor\FakeWall.h" />
-    <ClInclude Include="Actor\Ground.h" />
+    <ClInclude Include="Actor\Goal.h" />
     <ClInclude Include="Actor\Player.h" />
     <ClInclude Include="Actor\Wall.h" />
     <ClInclude Include="Interface\ICanPlayerMove.h" />

@@ -9,22 +9,31 @@
 namespace Wanted
 {
 	Actor::Actor(
-		const char* image, 
+		const char* image,
 		const Vector2& position,
 		Color color)
 		: position(position), color(color)
 	{
 		// 문자열 복사.
-		width = static_cast<int>(strlen(image));
-		this->image = new char[width + 1];
-		strcpy_s(this->image, width + 1, image);
+		int length = strlen(image);
+		for (int p = 0; p < length; ++p)
+		{
+			if (image[p] == '\n')
+			{
+				width = 0;
+				height++;
+				continue;
+			}
+			width++;
+		}
+		this->image = new char[length + 1];
+		strcpy_s(this->image, length + 1, image);
 	}
 
 	Actor::~Actor()
 	{
 		// 메모리 해제.
 		SafeDeleteArray(image);
-		SafeDelete(owner);
 	}
 
 	void Actor::BeginPlay()
@@ -67,36 +76,28 @@ namespace Wanted
 
 	bool Actor::TestIntersect(const Actor* const other)
 	{
-		// AABB (Axis Aligned Bounding Box).
-		// x 좌표만 고려하면됨. y는 크기가 1이기 때문.
+		const int xMin = position.x;
+		const int xMax = position.x + width - 1;
 
-		// 자기자신의 x좌표 정보.
-		int xMin = position.x;
-		int xMax = position.x + width - 1;
+		const int yMin = position.y;
+		const int yMax = position.y + height - 1;
 
-		// 충돌을 비교할 다른 액터의 x좌표 정보.
-		int otherXMin = other->GetPosition().x;
-		int otherXMax
-			= other->position.x + other->width - 1;
+		const int otherXMin = other->position.x;
+		const int otherXMax = other->position.x + other->width - 1;
 
-		// 안겹치는 조건 확인.
+		const int otherYMin = other->position.y;
+		const int otherYMax = other->position.y + other->height - 1;
 
-		// 다른 액터의 왼쪽 좌표가
-		// 내 오른쪽 좌표보다 더 오른쪽에 있는 경우.
-		if (otherXMin > xMax)
-		{
-			return false;
-		}
+		// 완전히 오른쪽에 있는 경우.
+		if (otherXMin > xMax) return false;
+		// 완전히 왼쪽에 있는 경우.
+		if (otherXMax < xMin) return false;
+		// 완전히 아래에 있는 경우.
+		if (otherYMin > yMax) return false;
+		// 완전히 위에 있는 경우.
+		if (otherYMax < yMin) return false;
 
-		// 다른 액터의 오른쪽 좌표가
-		// 내 왼쪽 좌표보다 더 왼쪽에 있는 경우.
-		if (otherXMax < xMin)
-		{
-			return false;
-		}
-
-		// y는 크기가 1이기 때문에 좌표가 같은지 여부만 확인.
-		return position.y == other->position.y;
+		return true;
 	}
 
 	void Actor::SetPosition(const Vector2& newPosition)
