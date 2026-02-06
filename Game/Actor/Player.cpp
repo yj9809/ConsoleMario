@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Engine/Engine.h"
+#include "Manager/ScreenManager.h"
 #include "Core/Input.h"
 #include "Level/GameLevel.h"
 
@@ -27,6 +27,12 @@ void Player::Tick(float deltaTime)
 	if (!canPlayerMove)
 	{
 		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
+	}
+
+	if (ESC_DOWN)
+	{
+		ScreenManager::Get().ToggleMenu();
+		return;
 	}
 
 	Move(deltaTime);
@@ -80,9 +86,9 @@ void Player::MoveRight(float deltaTime)
 		xPosition = position.x;
 	}
 
-	if (xPosition + width > Engine::Get().GetWidth())
+	if (xPosition + width > ScreenManager::Get().GetWidth())
 	{
-		xPosition = static_cast<float>(Engine::Get().GetWidth() - width);
+		xPosition = static_cast<float>(ScreenManager::Get().GetWidth() - width);
 	}
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
@@ -191,7 +197,7 @@ void Player::Fall()
 	}
 
 	// 플레이어 포지션이 화면 아래로 벗어났는지 체크.
-	if (position.y > Engine::Get().GetHeight())
+	if (position.y > ScreenManager::Get().GetHeight())
 	{
 		// 라이프가 남아있는지 체크.
 		if (GetOwner()->As<GameLevel>()->GetLife() > 0)
