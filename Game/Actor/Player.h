@@ -37,14 +37,11 @@ private:
 	void Jump(float deltaTime);
 	void Fall();
 
+	// 리스폰 함수.
+	void RespawnAt(const Vector2& pos);
+
 	// 가속도 설정 함수.
-	inline void SetWeight(float& weight, float deltaTime)
-	{
-		// 시간이 지날수록 가속도 증가.
-		weight += deltaTime * 5.0f;
-		// 가속도 최대치 설정.
-		Util::Clamp(weight, 0.0f, 35.0f);
-	}
+	void SetWeight(float& weight, float deltaTime);
 
 private:
 	ICanPlayerMove* canPlayerMove = nullptr;

@@ -30,6 +30,7 @@ namespace Wanted
 		static Vector2 One;
 		static Vector2 Up;
 		static Vector2 Right;
+		static Vector2 SpawnPoint;
 
 	public:
 		// x/y ÁÂÇ¥.

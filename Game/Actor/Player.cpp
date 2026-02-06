@@ -9,7 +9,7 @@
 #define ESC_DOWN (Input::Get().GetKeyDown(VK_ESCAPE))
 
 Player::Player()
-	: super(" P \n/|\\\n/ \\", Vector2(0, 20), Color::Red), yPosition(position.y)
+	: super(" P \n/|\\\n/ \\", Vector2::SpawnPoint, Color::Red), yPosition(position.y)
 {
 	sortingOrder = 10;
 }
@@ -184,11 +184,45 @@ void Player::Fall()
 	Vector2 RightDownPosition = Vector2(xPosition + width - 1, (yPosition + height));
 	isGround = canPlayerMove->IsOnGround(LeftDownPosition) || canPlayerMove->IsOnGround(RightDownPosition);
 	if (!isGround && currentState == State::Idle)
-	{
+	{ 
 		// 바닥에서 벗어났으므로 낙하 상태로 전환.
 		currentState = State::Falling;
 		velocityY = 0.0f;
 	}
+
+	// 플레이어 포지션이 화면 아래로 벗어났는지 체크.
+	if (position.y > Engine::Get().GetHeight())
+	{
+		// 라이프가 남아있는지 체크.
+		if (GetOwner()->As<GameLevel>()->GetLife() > 0)
+		{
+			// 라이프 감소 및 초기 위치로 리스폰.
+			GetOwner()->As<GameLevel>()->SetLife();
+			RespawnAt(Vector2::SpawnPoint);
+		}
+		else
+		{
+			QuitGame();
+		}
+	}
+}
+
+// Todo: 현재는 낙사만 체크하지만, 추후 몬스터와 충돌 시 리스폰 처리도 이 함수에서 담당할 수 있다.
+inline void Player::RespawnAt(const Vector2& pos)
+{
+	xPosition = pos.x;
+	yPosition = pos.y;
+	SetPosition(Vector2::SpawnPoint);
+
+	currentState = State::Idle;
+}
+
+inline void Player::SetWeight(float& weight, float deltaTime)
+{
+	// 시간이 지날수록 가속도 증가.
+	weight += deltaTime * 5.0f;
+	// 가속도 최대치 설정.
+	Util::Clamp(weight, 0.0f, 25.0f);
 }
 
 void Player::ClearMove(float deltaTime)
