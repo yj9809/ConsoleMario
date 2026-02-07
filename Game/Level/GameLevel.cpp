@@ -32,6 +32,14 @@ void GameLevel::Draw()
     super::Draw();
 }
 
+void GameLevel::Spawn()
+{
+	if (enemySpawn)
+	{
+		enemySpawn->Spawn();
+	}
+}
+
 void GameLevel::ProcessCollisionCoinAndPlayer()
 {
 	Actor* player = nullptr;
@@ -105,7 +113,7 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 	}
 }
 
-bool GameLevel::CanMove(const Vector2& playerPosition, const Vector2& nextPosition)
+bool GameLevel::CanMove(const Vector2& nextPosition)
 {
 	// 레벨에 있는 벽 액터 수집.
 	std::vector<Actor*> walls;
@@ -154,6 +162,31 @@ bool GameLevel::IsOnGround(const Vector2& playerDownPosition)
 	return false;
 }
 
+bool GameLevel::IsNextToGround(const Wanted::Vector2& enemyNextPosition)
+{
+	// 레벨에 있는 땅 액터 수집.
+	std::vector<Actor*> grounds;
+
+	for (Actor* actor : actors)
+	{
+		if (actor->IsTypeOf<Wall>())
+		{
+			grounds.push_back(actor);
+			continue;
+		}
+	}
+
+	for (Actor* ground : grounds)
+	{
+		if (ground->GetPosition() == enemyNextPosition)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void GameLevel::LoadMap(const char* mapFile)
 {
 	char path[2048] = {};
@@ -183,6 +216,9 @@ void GameLevel::LoadMap(const char* mapFile)
 
 	Wanted::Vector2 position;
 
+	// 적 위치 저장 배열.
+	std::vector<Vector2> enemyPositions;
+
 	while (true)
 	{
 		if (index >= fileSize)
@@ -192,7 +228,7 @@ void GameLevel::LoadMap(const char* mapFile)
 
 		char mapCharacter = buffer[index];
 		++index;
-
+		
 		if (mapCharacter == '\n')
 		{
 			++position.y;
@@ -216,8 +252,19 @@ void GameLevel::LoadMap(const char* mapFile)
 		case 'C':
 			AddNewActor(new Coin(position));
 			break;
+		case 'E':
+			// 배열에 위치 값을 전부 저장.
+			enemyPositions.emplace_back(position);
+			break;
 		}
 		++position.x;
+	}
+
+	// 저장된 적 위치 배열이 없을 경우 스포너 생성 안함.
+	if (enemyPositions.size() > 0)
+	{
+		// 적 스포너 액터 추가.
+		enemySpawn = AddNewActorReturn(new EnemySpawner(enemyPositions))->As<EnemySpawner>();
 	}
 
 	delete[] buffer;

@@ -106,6 +106,17 @@ namespace Wanted
 		newActor->SetOwner(this);
 	}
 
+	Actor* Level::AddNewActorReturn(Actor* newActor)
+	{
+		// 나중에 추가를 위해 임시 배열에 저장.
+		addRequestedActors.emplace_back(newActor);
+
+		// 오너십 설정.
+		newActor->SetOwner(this);
+
+		return newActor;
+	}
+
 	void Level::ProcessAddAndDestroyActors()
 	{
 		// 제거 처리.

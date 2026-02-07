@@ -144,6 +144,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor\Coin.cpp" />
+    <ClCompile Include="Actor\Enemy.cpp" />
+    <ClCompile Include="Actor\EnemySpawner.cpp" />
     <ClCompile Include="Actor\FakeGoal.cpp" />
     <ClCompile Include="Actor\FakeWall.cpp" />
     <ClCompile Include="Actor\Goal.cpp" />
@@ -156,6 +158,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor\Coin.h" />
+    <ClInclude Include="Actor\Enemy.h" />
+    <ClInclude Include="Actor\EnemySpawner.h" />
     <ClInclude Include="Actor\FakeGoal.h" />
     <ClInclude Include="Actor\FakeWall.h" />
     <ClInclude Include="Actor\Goal.h" />

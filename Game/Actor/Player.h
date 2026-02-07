@@ -23,11 +23,14 @@ class Player : public Actor
 public:
 	Player();
 
-	void SetClear() { currentState = State::Clear; }
+	inline void SetClear() { currentState = State::Clear; }
 
 	void ClearMove(float deltaTime);
 
+	inline State GetState() { return currentState; }
+
 private:
+	virtual void BeginPlay() override;
 	virtual void Tick(float deltaTime) override;
 
 	void Move(float deltaTime);
@@ -65,7 +68,7 @@ private:
 	// 수직 속도 변수.
 	float velocityY = 0.0f;
 	// 점프 속도 변수.
-	float jumpSpeed = 45.0f;
+	float jumpSpeed = 40.0f;
 	// 중력 변수.
 	float gravity = 100.0f;
 

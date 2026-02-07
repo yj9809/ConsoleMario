@@ -27,6 +27,7 @@ namespace Wanted
 
 		// 액터 추가 함수.
 		void AddNewActor(Actor* newActor);
+		Actor* AddNewActorReturn(Actor* newActor);
 
 		// 액터 추가/제거 처리 함수.
 		void ProcessAddAndDestroyActors();

@@ -14,6 +14,14 @@ Player::Player()
 	sortingOrder = 10;
 }
 
+void Player::BeginPlay()
+{
+	if (!canPlayerMove)
+	{
+		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
+	}
+}
+
 void Player::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
@@ -24,10 +32,7 @@ void Player::Tick(float deltaTime)
 		return;
 	}
 
-	if (!canPlayerMove)
-	{
-		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
-	}
+
 
 	if (ESC_DOWN)
 	{
@@ -81,7 +86,7 @@ void Player::MoveRight(float deltaTime)
 
 	Vector2 nextUpPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition));
 	Vector2 nextDownPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition + height - 1));
-	if (!canPlayerMove->CanMove(position, nextUpPosition) || !canPlayerMove->CanMove(position, nextDownPosition))
+	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
 		xPosition = position.x;
 	}
@@ -104,7 +109,7 @@ void Player::MoveLeft(float deltaTime)
 
 	Vector2 nextUpPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
 	Vector2 nextDownPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition + height - 1));
-	if (!canPlayerMove->CanMove(position, nextUpPosition) || !canPlayerMove->CanMove(position, nextDownPosition))
+	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
 		xPosition = position.x;
 	}
@@ -153,8 +158,8 @@ void Player::Jump(float deltaTime)
 	Vector2 pootLeft = Vector2((int)xPosition, (int)(yPosition + height - 1));
 	Vector2 pootRigth = Vector2((int)(xPosition + width - 1), (int)(yPosition + height - 1));
 
-	bool hitCeiling = !canPlayerMove->CanMove(position, headLeft) || !canPlayerMove->CanMove(Vector2(position.x + width - 1, position.y), headRight)
-		|| !canPlayerMove->CanMove(position, pootLeft) || !canPlayerMove->CanMove(position, pootRigth);
+	bool hitCeiling = !canPlayerMove->CanMove(headLeft) || !canPlayerMove->CanMove(headRight)
+		|| !canPlayerMove->CanMove(pootLeft) || !canPlayerMove->CanMove(pootRigth);
 
 	// 지면에 닿으면 위치/속도를 보정하고 점프 상태를 해제한다.
 	if (hitCeiling)
@@ -219,6 +224,8 @@ inline void Player::RespawnAt(const Vector2& pos)
 	xPosition = pos.x;
 	yPosition = pos.y;
 	SetPosition(Vector2::SpawnPoint);
+
+	GetOwner()->As<GameLevel>()->Spawn();
 
 	currentState = State::Idle;
 }

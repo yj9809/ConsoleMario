@@ -1,0 +1,69 @@
+#include "Enemy.h"
+#include "Manager/ScreenManager.h"
+#include "Level/GameLevel.h"
+
+#define RiGHT_POSITION_X static_cast<int>(xPosition + width - 1)
+#define LEFT_POSITION_X static_cast<int>(xPosition)
+#define WALL_CHECK_POSITION_Y static_cast<int>(position.y + ((height - 1) / 2))
+#define NEXT_GROUND_CHECK_POSITION_Y static_cast<int>(position.y + height)
+
+Enemy::Enemy(const Vector2& position)
+	: super("EEE\nEEE\nE E", position, Color::Blue), xPosition(static_cast<float>(position.x))
+{
+}
+
+void Enemy::BeginPlay()
+{
+	super::BeginPlay();
+
+	if (!canPlayerMove)
+	{
+		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
+	}
+}
+
+void Enemy::Tick(float deltaTime)
+{
+	super::Tick(deltaTime);
+
+	Move(deltaTime);
+}
+
+void Enemy::Move(float deltaTime)
+{	
+	int wallY = static_cast<int>(position.y + ((height - 1) / 2));
+	int groundY = static_cast<int>(position.y + height);
+
+	if (!WallCheck(RiGHT_POSITION_X, WALL_CHECK_POSITION_Y) || !WallCheck(LEFT_POSITION_X, WALL_CHECK_POSITION_Y)
+		|| !GroundCheck(RiGHT_POSITION_X, NEXT_GROUND_CHECK_POSITION_Y) || !GroundCheck(LEFT_POSITION_X, NEXT_GROUND_CHECK_POSITION_Y))
+	{
+		moveDirection *= -1;
+	}
+	
+	xPosition += (moveSpeed * deltaTime) * moveDirection;
+
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(position.y)));
+}
+
+bool Enemy::WallCheck(int x, int y)
+{
+	Vector2 nextUpPosition = Vector2(x, y);
+	Vector2 nextDownPosition = Vector2(x, y);
+
+	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Enemy::GroundCheck(int x, int y)
+{
+	Vector2 nextGroundPosition = Vector2(x, y);
+	if (canPlayerMove->IsNextToGround(nextGroundPosition))
+	{
+		return true;
+	}
+	return false;
+}

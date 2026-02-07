@@ -33,12 +33,8 @@ ScreenManager::~ScreenManager()
 
 void ScreenManager::ToggleMenu()
 {
-	// 변경할 인덱스 계산.
-	// 현재 활성 레벨 인덱스가 1이면 -> 0으로.
-	// 현재 활성 레벨 인덱스가 0이면 -> 1로.
-	// 마법의 공식 - (1-x) -> OneMinus
-	int stateIndex = (int)currentScreenType;	// static_cast.
-	int nextState = 1 - stateIndex;	// one - x.
+	int stateIndex = (int)currentScreenType;
+	int nextState = 1 - stateIndex;
 	currentScreenType = static_cast<ScreenType>(nextState);
 
 	// 메인 레벨 변경.
