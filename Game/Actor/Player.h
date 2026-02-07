@@ -9,6 +9,9 @@ using namespace Wanted;
 
 class Player : public Actor
 {
+	RTTI_DECLARATIONS(Player, Actor)
+
+public:
 	enum class State
 	{
 		Idle,
@@ -18,8 +21,6 @@ class Player : public Actor
 		Clear,
 	};
 
-	RTTI_DECLARATIONS(Player, Actor)
-
 public:
 	Player();
 
@@ -28,6 +29,9 @@ public:
 	void ClearMove(float deltaTime);
 
 	inline State GetState() { return currentState; }
+
+	// 리스폰 함수.
+	void RespawnAt(const Vector2& pos);
 
 private:
 	virtual void BeginPlay() override;
@@ -39,10 +43,7 @@ private:
 
 	void Jump(float deltaTime);
 	void Fall();
-
-	// 리스폰 함수.
-	void RespawnAt(const Vector2& pos);
-
+	
 	// 가속도 설정 함수.
 	void SetWeight(float& weight, float deltaTime);
 

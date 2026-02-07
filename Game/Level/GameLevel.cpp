@@ -7,6 +7,7 @@
 #include "Actor/Player.h"
 #include "Actor/FakeWall.h"
 #include "Actor/Coin.h"
+#include "Actor/Enemy.h"
 
 GameLevel::GameLevel()
 {
@@ -25,6 +26,7 @@ void GameLevel::Tick(float deltaTime)
 
 	ProcessCollisionCoinAndPlayer();
 	ProcessCollisionGoalAndPlayer();
+	ProcessCollisionEnemyAndPlayer();
 }
 
 void GameLevel::Draw()
@@ -109,6 +111,49 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 			player->As<Player>()->SetClear();
 			score += 130 - y;
 			continue;
+		}
+	}
+}
+
+void GameLevel::ProcessCollisionEnemyAndPlayer()
+{
+	Player* player = nullptr;
+	std::vector<Actor*> enemies;
+
+	for (Actor* const actor : actors)
+	{
+		if(actor->IsTypeOf<Player>())
+		{
+			player = actor->As<Player>();
+			continue;
+		}
+		if(actor->IsTypeOf<Enemy>())
+		{
+			enemies.push_back(actor);
+			continue;
+		}
+	}
+
+	if (!player || enemies.size() == 0)
+	{
+		return;
+	}
+
+	for (Actor* const enemy : enemies)
+	{
+		if (player->TestIntersect(enemy))
+		{
+			if (player->GetState() == Player::State::Falling)
+			{
+				enemySpawn->RemoveEnemy(enemy);
+				enemy->Destroy();
+				score += 50;
+				continue;
+			}
+			else 
+			{
+				player->RespawnAt(Vector2::SpawnPoint);
+			}
 		}
 	}
 }

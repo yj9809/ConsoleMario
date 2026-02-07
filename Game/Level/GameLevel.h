@@ -23,6 +23,7 @@ public:
 
 	void ProcessCollisionCoinAndPlayer();
 	void ProcessCollisionGoalAndPlayer();
+	void ProcessCollisionEnemyAndPlayer();
 
 	virtual bool CanMove(const Vector2& nextPosition) override;
 
