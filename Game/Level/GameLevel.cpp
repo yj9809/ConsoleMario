@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include "GameLevel.h"
+#include "Render/Renderer.h"
 #include "Actor/Goal.h"
 #include "Actor/FakeGoal.h"
 #include "Actor/Wall.h"
-#include "Actor/Player.h"
 #include "Actor/FakeWall.h"
 #include "Actor/Coin.h"
 #include "Actor/Enemy.h"
@@ -13,11 +13,14 @@ GameLevel::GameLevel()
 {
 	LoadMap("1-1.txt");
 
-	AddNewActor(new Player());
+	player = AddNewActorReturn(new Player())->As<Player>();
+
+	cameraManager = new CameraManager(120, worldWidth);
 }
 
 GameLevel::~GameLevel()
 {
+	SafeDelete(cameraManager);
 }
 
 void GameLevel::Tick(float deltaTime)
@@ -27,6 +30,9 @@ void GameLevel::Tick(float deltaTime)
 	ProcessCollisionCoinAndPlayer();
 	ProcessCollisionGoalAndPlayer();
 	ProcessCollisionEnemyAndPlayer();
+
+	cameraManager->Update(player->GetPosition().x);
+	Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());
 }
 
 void GameLevel::Draw()
@@ -44,17 +50,10 @@ void GameLevel::Spawn()
 
 void GameLevel::ProcessCollisionCoinAndPlayer()
 {
-	Actor* player = nullptr;
 	std::vector<Actor*> coins;
 
 	for (Actor* const actor : actors)
 	{
-		if (actor->IsTypeOf<Player>())
-		{
-			player = actor;
-			continue;
-		}
-
 		if (actor->IsTypeOf<Coin>())
 		{
 			coins.push_back(actor);
@@ -80,17 +79,10 @@ void GameLevel::ProcessCollisionCoinAndPlayer()
 
 void GameLevel::ProcessCollisionGoalAndPlayer()
 {
-	Actor* player = nullptr;
 	std::vector<Actor*> goals;
 
 	for (Actor* const actor : actors)
 	{
-		if (actor->IsTypeOf<Player>())
-		{
-			player = actor;
-			continue;
-		}
-
 		if (actor->IsTypeOf<Goal>())
 		{
 			goals.push_back(actor);
@@ -117,16 +109,10 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 
 void GameLevel::ProcessCollisionEnemyAndPlayer()
 {
-	Player* player = nullptr;
 	std::vector<Actor*> enemies;
 
 	for (Actor* const actor : actors)
 	{
-		if(actor->IsTypeOf<Player>())
-		{
-			player = actor->As<Player>();
-			continue;
-		}
 		if(actor->IsTypeOf<Enemy>())
 		{
 			enemies.push_back(actor);
@@ -153,9 +139,20 @@ void GameLevel::ProcessCollisionEnemyAndPlayer()
 			else 
 			{
 				player->RespawnAt(Vector2::SpawnPoint);
+				CameraResetToSpawn();
 			}
 		}
 	}
+}
+
+void GameLevel::CameraResetToSpawn()
+{
+	cameraManager->ResetToSpawn(Vector2::SpawnPoint.x);
+}
+
+int GameLevel::GetCameraXPosition()
+{
+	return cameraManager->GetCameraXPosition();
 }
 
 bool GameLevel::CanMove(const Vector2& nextPosition)
@@ -257,6 +254,7 @@ void GameLevel::LoadMap(const char* mapFile)
 
 	size_t readSize = fread(buffer, sizeof(char), fileSize, file);
 
+	int maxWidth = 0;
 	int index = 0;
 
 	Wanted::Vector2 position;
@@ -276,6 +274,7 @@ void GameLevel::LoadMap(const char* mapFile)
 		
 		if (mapCharacter == '\n')
 		{
+			maxWidth = max(maxWidth, position.x);
 			++position.y;
 			position.x = 0;
 			continue;
@@ -304,6 +303,8 @@ void GameLevel::LoadMap(const char* mapFile)
 		}
 		++position.x;
 	}
+
+	worldWidth = maxWidth;
 
 	// 저장된 적 위치 배열이 없을 경우 스포너 생성 안함.
 	if (enemyPositions.size() > 0)

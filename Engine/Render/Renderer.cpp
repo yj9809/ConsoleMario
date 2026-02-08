@@ -110,14 +110,14 @@ namespace Wanted
 					continue;
 				}
 
-				const int drawX = command.position.x + localX;
+				const int drawX = command.position.x + localX - cameraX;
 				const int drawY = command.position.y + localY;
 
 				// 다음 문자로 이동
 				localX++;
 
 				// 화면 범위 밖이면 스킵
-				if (drawX < 0 || drawX >= screenSize.x ||
+				if (drawX < 0 || drawX >= viewportWidth ||
 					drawY < 0 || drawY >= screenSize.y)
 				{
 					continue;

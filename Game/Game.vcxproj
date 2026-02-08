@@ -154,6 +154,7 @@
     <ClCompile Include="Level\GameLevel.cpp" />
     <ClCompile Include="Level\MenuLevel.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Manager\CameraManager.cpp" />
     <ClCompile Include="Manager\ScreenManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,7 @@
     <ClInclude Include="Interface\ICanPlayerMove.h" />
     <ClInclude Include="Level\GameLevel.h" />
     <ClInclude Include="Level\MenuLevel.h" />
+    <ClInclude Include="Manager\CameraManager.h" />
     <ClInclude Include="Manager\ScreenManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

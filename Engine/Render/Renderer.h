@@ -59,6 +59,12 @@ namespace Wanted
 		// 싱글톤 접근 함수.
 		static Renderer& Get();
 
+		inline void SetCameraPosition(int cameraX, int width) 
+		{
+			this->cameraX = cameraX;
+			viewportWidth = width; 
+		}
+
 	private:
 
 		// 화면 지우는 함수.
@@ -88,5 +94,9 @@ namespace Wanted
 
 		// 싱글톤 구현을 위한 정적 변수.
 		static Renderer* instance;
+
+		// 화면 출력 사이즈 변수.
+		int cameraX = 0;
+		int viewportWidth = 0;
 	};
 }

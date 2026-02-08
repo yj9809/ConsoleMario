@@ -102,9 +102,10 @@ void Player::MoveLeft(float deltaTime)
 {
 	xPosition -= (moveSpeed + weight) * deltaTime;
 
-	if (xPosition < 0.0f)
+	float cameraX = static_cast<float>(GetOwner()->As<GameLevel>()->GetCameraXPosition());
+	if (xPosition < cameraX)
 	{
-		xPosition = 0.0f;
+		xPosition = cameraX;
 	}
 
 	Vector2 nextUpPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
@@ -226,6 +227,7 @@ inline void Player::RespawnAt(const Vector2& pos)
 	SetPosition(Vector2::SpawnPoint);
 
 	GetOwner()->As<GameLevel>()->Spawn();
+	GetOwner()->As<GameLevel>()->CameraResetToSpawn();
 
 	currentState = State::Idle;
 }

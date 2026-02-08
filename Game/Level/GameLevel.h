@@ -3,6 +3,8 @@
 #include "Level/Level.h"
 #include "Interface/ICanPlayerMove.h"
 #include "Actor/EnemySpawner.h"
+#include	"Actor/Player.h"
+#include  "Manager/CameraManager.h"
 
 #include <vector>
 
@@ -25,6 +27,10 @@ public:
 	void ProcessCollisionGoalAndPlayer();
 	void ProcessCollisionEnemyAndPlayer();
 
+	void CameraResetToSpawn();
+
+	int GetCameraXPosition();
+
 	virtual bool CanMove(const Vector2& nextPosition) override;
 
 	virtual bool IsOnGround(const Vector2& playerDownPosition) override;
@@ -39,6 +45,12 @@ private:
 
 private:
 	EnemySpawner* enemySpawn = nullptr;
+
+	CameraManager* cameraManager = nullptr;
+
+	Player* player = nullptr;
+
+	int worldWidth = 0;
 
 	int score = 0;
 
