@@ -55,6 +55,7 @@ namespace Wanted
 
 		// 그리는데 필요한 데이터를 제출(적재)하는 함수.
 		void Submit(const char* text, const Vector2& position, Color color = Color::White, int sortingOrder = 0);
+		void SubmitUI(const char* text, const Vector2& position, Color color = Color::White, int sortingOrder = 0);
 
 		// 싱글톤 접근 함수.
 		static Renderer& Get();
@@ -91,6 +92,9 @@ namespace Wanted
 
 		// 렌더 큐 (씬의 모든 그리기 명령을 모아두는 배열). 
 		std::vector<RenderCommand> renderQueue;
+
+		// UI 큐 (씬의 UI를 그리기 위한 배열)
+		std::vector<RenderCommand> uiQueue;
 
 		// 싱글톤 구현을 위한 정적 변수.
 		static Renderer* instance;

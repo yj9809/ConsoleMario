@@ -140,6 +140,59 @@ namespace Wanted
 			}
 		}
 
+		for (const RenderCommand& command : uiQueue)
+		{
+			// 화면에 그릴 텍스트가 없으면 건너뜀.
+			if (!command.text)
+			{
+				continue;
+			}
+
+			int localX = 0;
+			int localY = 0;
+
+			for (const char* p = command.text; *p != '\0'; ++p)
+			{
+				const char ch = *p;
+
+				// 줄바꿈 처리
+				if (ch == '\n')
+				{
+					localY++;
+					localX = 0;
+					continue;
+				}
+
+				const int drawX = command.position.x + localX;
+				const int drawY = command.position.y + localY;
+
+				// 다음 문자로 이동
+				localX++;
+
+				// 화면 범위 밖이면 스킵
+				if (drawX < 0 || drawX >= viewportWidth ||
+					drawY < 0 || drawY >= screenSize.y)
+				{
+					continue;
+				}
+
+				const int index = (drawY * screenSize.x) + drawX;
+
+				// 그리기 우선순위 비교.
+				if (frame->sortingOrderArray[index] > command.sortingOrder)
+				{
+					continue;
+				}
+
+				// 데이터 기록.
+				frame->charInfoArray[index].Char.AsciiChar = ch;
+				frame->charInfoArray[index].Attributes = (WORD)command.color;
+
+				// 우선순위 업데이트.
+				frame->sortingOrderArray[index] = command.sortingOrder;
+			}
+		}
+
 		// 그리기.
 		GetCurrentBuffer()->Draw(frame->charInfoArray);
 
@@ -148,6 +201,7 @@ namespace Wanted
 
 		// 렌더 큐 비우기.
 		renderQueue.clear();
+		uiQueue.clear();
 	}
 
 	Renderer& Renderer::Get()
@@ -181,6 +235,17 @@ namespace Wanted
 		command.sortingOrder = sortingOrder;
 
 		renderQueue.emplace_back(command);
+	}
+
+	void Renderer::SubmitUI(const char* text, const Vector2& position, Color color, int sortingOrder)
+	{
+		RenderCommand command = {};
+		command.text = text;
+		command.position = position;
+		command.color = color;
+		command.sortingOrder = sortingOrder;
+
+		uiQueue.emplace_back(command);
 	}
 
 	void Renderer::Present()

@@ -38,6 +38,14 @@ void GameLevel::Tick(float deltaTime)
 void GameLevel::Draw()
 {
     super::Draw();
+
+	char uiLife[20] = {};
+	char uiScore[20] = {};
+
+	sprintf_s(uiLife, 20, "LIFE: %d", life);
+	Renderer::Get().SubmitUI(uiLife, Vector2(0, 0), Color::White, 1000);
+	sprintf_s(uiScore, 20, "SCORE: %d", score);
+	Renderer::Get().SubmitUI(uiScore, Vector2(0, 1), Color::White, 1000);
 }
 
 void GameLevel::Spawn()

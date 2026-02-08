@@ -15,7 +15,7 @@ namespace Wanted
 		: position(position), color(color)
 	{
 		// 문자열 복사.
-		int length = strlen(image);
+		int length = static_cast<int>(strlen(image));
 		for (int p = 0; p < length; ++p)
 		{
 			if (image[p] == '\n')

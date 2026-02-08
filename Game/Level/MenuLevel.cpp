@@ -40,6 +40,8 @@ void MenuLevel::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 
+	Renderer::Get().SetCameraPosition(0, 30);
+
 	// 입력 처리 (방향키 위/아래키, 엔터키, ESC키).
 	// 배열 길이.
 	static int length = static_cast<int>(items.size());

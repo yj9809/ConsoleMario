@@ -242,7 +242,7 @@ inline void Player::SetWeight(float& weight, float deltaTime)
 
 void Player::ClearMove(float deltaTime)
 {
-	if (yPosition < 27.0f) 
+	if (yPosition < 26.0f) 
 	{
 		yPosition += moveSpeed * deltaTime;
 	}
