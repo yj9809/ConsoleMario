@@ -6,13 +6,16 @@
 
 using namespace Wanted;
 
+class GameLevel;
+
 enum class ScreenType
 {
-	Title,
+	Title_Menu,
 	Game,
 	Respawn,
 	GameOver,
-	Clear
+	MapClear,
+	GameClear
 };
 
 class ScreenManager : public Engine
@@ -21,13 +24,17 @@ public:
 	ScreenManager();
 	~ScreenManager();
 
-	void ToggleMenu();
+	void ToggleMenu(int num);
+
+	int GetLife();
+
+	GameLevel* GetGameLevel() const;
 
 	static ScreenManager& Get();
-private:
-	std::vector<Level*> levels;
 
 	ScreenType currentScreenType = ScreenType::Game;
+private:
+	std::vector<Level*> levels;
 
 	static ScreenManager* instance;
 };

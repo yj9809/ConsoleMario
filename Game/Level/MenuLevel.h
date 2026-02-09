@@ -42,6 +42,8 @@ public:
 	MenuLevel();
 	~MenuLevel();
 
+	void Menu();
+
 	// 이벤트 함수 오버라이드.
 	virtual void Tick(float deltaTime) override;
 	virtual void Draw() override;
@@ -58,5 +60,8 @@ private:
 
 	// 메뉴 아이템 배열.
 	std::vector<MenuItem*> items;
+
+	// 출력할 아이템 배열.
+	std::vector<MenuItem*> displayItems;
 };
 

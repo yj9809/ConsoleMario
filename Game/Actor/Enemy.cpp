@@ -10,6 +10,7 @@
 Enemy::Enemy(const Vector2& position)
 	: super("EEE\nEEE\nE E", position, Color::Blue), xPosition(static_cast<float>(position.x))
 {
+	sortingOrder = 7;
 }
 
 void Enemy::BeginPlay()

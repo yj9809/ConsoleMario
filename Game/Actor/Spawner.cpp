@@ -1,23 +1,23 @@
-#include "EnemySpawner.h"
+#include "Spawner.h"
 #include "Level/Level.h"
 #include "Level/GameLevel.h"
 #include "Actor/Enemy.h"
 
-EnemySpawner::EnemySpawner(const std::vector<Vector2>& newEnemyPosition)
+Spawner::Spawner(const std::vector<Vector2>& newEnemyPosition)
 	: enemyPositions(newEnemyPosition)
 {
 	
 }
 
-void EnemySpawner::BeginPlay()
+void Spawner::BeginPlay()
 {
 	super::BeginPlay();
 
 	Spawn();
 }
 
-// Todo: 추후 플레이어가 적을 처치할 경우 배열에서 제거하기 위한 함수.
-void EnemySpawner::RemoveEnemy(Actor* targetEnemy)
+// 처지한 적을 배열에서 제거하는 함수.
+void Spawner::RemoveEnemy(Actor* targetEnemy)
 {
 	auto target = std::find(enemies.begin(), enemies.end(), targetEnemy);
 	if (target != enemies.end())
@@ -26,7 +26,7 @@ void EnemySpawner::RemoveEnemy(Actor* targetEnemy)
 	}
 }
 
-void EnemySpawner::Spawn()
+void Spawner::Spawn()
 {
 	// 플레이어가 죽을 경우 남은 적을 처리하기 위해 
 	// 배열 내 모든 적 삭제.

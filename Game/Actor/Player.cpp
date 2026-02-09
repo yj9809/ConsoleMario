@@ -8,6 +8,11 @@
 #define SPACE_DOWN (Input::Get().GetKeyDown(VK_SPACE))
 #define ESC_DOWN (Input::Get().GetKeyDown(VK_ESCAPE))
 
+#define HEAD_RIGHT Vector2((int)(xPosition + width - 1), (int)(yPosition))
+#define HEAD_LEFT Vector2((int)(xPosition), (int)(yPosition))
+#define POOT_RIGHT Vector2((int)(xPosition + width - 1), (int)(yPosition + height - 1))
+#define POOT_LEFT Vector2((int)(xPosition), (int)(yPosition + height - 1))
+
 Player::Player()
 	: super(" P \n/|\\\n/ \\", Vector2::SpawnPoint, Color::Red), yPosition(position.y)
 {
@@ -32,11 +37,9 @@ void Player::Tick(float deltaTime)
 		return;
 	}
 
-
-
 	if (ESC_DOWN)
 	{
-		ScreenManager::Get().ToggleMenu();
+		ScreenManager::Get().ToggleMenu((int)ScreenType::Title_Menu);
 		return;
 	}
 
@@ -84,8 +87,8 @@ void Player::MoveRight(float deltaTime)
 {
 	xPosition += (moveSpeed + weight) * deltaTime;
 
-	Vector2 nextUpPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition));
-	Vector2 nextDownPosition = Vector2(static_cast<int>(xPosition + width - 1), static_cast<int>(yPosition + height - 1));
+	Vector2 nextUpPosition = HEAD_RIGHT;
+	Vector2 nextDownPosition = POOT_RIGHT;
 	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
 		xPosition = position.x;
@@ -108,14 +111,14 @@ void Player::MoveLeft(float deltaTime)
 		xPosition = cameraX;
 	}
 
-	Vector2 nextUpPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition));
-	Vector2 nextDownPosition = Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition + height - 1));
+	Vector2 nextUpPosition = HEAD_LEFT;
+	Vector2 nextDownPosition = POOT_LEFT;
 	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
 		xPosition = position.x;
 	}
 
-	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SetPosition(Vector2((int)(xPosition), (int)(yPosition)));
 }
 
 void Player::Jump(float deltaTime)
@@ -192,9 +195,11 @@ void Player::Jump(float deltaTime)
 void Player::Fall()
 {
 	// 바닥 체크.
-	Vector2 LeftDownPosition = Vector2(xPosition, (yPosition + height));
-	Vector2 RightDownPosition = Vector2(xPosition + width - 1, (yPosition + height));
+	Vector2 LeftDownPosition = Vector2((int)xPosition, (int)(yPosition + height));
+	Vector2 RightDownPosition = Vector2((int)(xPosition + width - 1), (int)(yPosition + height));
+
 	isGround = canPlayerMove->IsOnGround(LeftDownPosition) || canPlayerMove->IsOnGround(RightDownPosition);
+
 	if (!isGround && currentState == State::Idle)
 	{ 
 		// 바닥에서 벗어났으므로 낙하 상태로 전환.
@@ -208,28 +213,46 @@ void Player::Fall()
 		// 라이프가 남아있는지 체크.
 		if (GetOwner()->As<GameLevel>()->GetLife() > 0)
 		{
+			ScreenManager::Get().currentScreenType = ScreenType::Respawn;
+			ScreenManager::Get().ToggleMenu(0);
 			// 라이프 감소 및 초기 위치로 리스폰.
 			GetOwner()->As<GameLevel>()->SetLife();
 			RespawnAt(Vector2::SpawnPoint);
 		}
 		else
 		{
+			// Todo: 추후 게임 오버 처리 다시 해야함
 			QuitGame();
 		}
 	}
 }
 
-// Todo: 현재는 낙사만 체크하지만, 추후 몬스터와 충돌 시 리스폰 처리도 이 함수에서 담당할 수 있다.
+// 낙사, 몬스터 충돌 등으로 플레이어가 리스폰할 때 호출되는 함수.
 inline void Player::RespawnAt(const Vector2& pos)
 {
-	xPosition = pos.x;
-	yPosition = pos.y;
-	SetPosition(Vector2::SpawnPoint);
+	if (GetOwner()->As<GameLevel>()->GetLife() > 0)
+	{
+		xPosition = pos.x;
+		yPosition = pos.y;
+		SetPosition(Vector2::SpawnPoint);
 
-	GetOwner()->As<GameLevel>()->Spawn();
-	GetOwner()->As<GameLevel>()->CameraResetToSpawn();
+		GetOwner()->As<GameLevel>()->Spawn();
+		GetOwner()->As<GameLevel>()->CameraResetToSpawn();
 
-	currentState = State::Idle;
+		currentState = State::Idle;
+	}
+	else
+	{
+		// Todo: 추후 게임 오버 처리 다시 해야함
+		QuitGame();
+	}
+}
+
+void Player::AddPlatformMove(const Vector2& delta)
+{
+	xPosition += delta.x;
+	yPosition += delta.y;
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
 
 inline void Player::SetWeight(float& weight, float deltaTime)
@@ -237,7 +260,7 @@ inline void Player::SetWeight(float& weight, float deltaTime)
 	// 시간이 지날수록 가속도 증가.
 	weight += deltaTime * 5.0f;
 	// 가속도 최대치 설정.
-	Util::Clamp(weight, 0.0f, 25.0f);
+	Util::Clamp(weight, 0.0f, 15.0f);
 }
 
 void Player::ClearMove(float deltaTime)
@@ -246,9 +269,22 @@ void Player::ClearMove(float deltaTime)
 	{
 		yPosition += moveSpeed * deltaTime;
 	}
-	else
+	else if (xPosition < GetOwner()->As<GameLevel>()->GetCameraXPosition())
 	{
 		xPosition += moveSpeed * deltaTime;
+	}
+	else
+	{
+		if(GetOwner()->As<GameLevel>()->GetCurrentMap() == GameLevel::Map::Map3)
+		{
+			ScreenManager::Get().currentScreenType = ScreenType::GameClear;
+		}
+		else
+		{
+			ScreenManager::Get().currentScreenType = ScreenType::MapClear;
+		}
+		
+		ScreenManager::Get().ToggleMenu(0);
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));

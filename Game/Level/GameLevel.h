@@ -2,7 +2,7 @@
 
 #include "Level/Level.h"
 #include "Interface/ICanPlayerMove.h"
-#include "Actor/EnemySpawner.h"
+#include "Actor/Spawner.h"
 #include	"Actor/Player.h"
 #include  "Manager/CameraManager.h"
 
@@ -13,6 +13,14 @@ using namespace Wanted;
 class GameLevel : public Level, public ICanPlayerMove
 {
 	RTTI_DECLARATIONS(GameLevel, Level)
+
+public:
+	enum class Map
+	{
+		Map1,
+		Map2,
+		Map3,
+	};
 
 public:
 	GameLevel();
@@ -39,14 +47,23 @@ public:
 
 	inline int GetLife() const { return life; }
 	inline void SetLife() { life--; }
+	inline Map GetCurrentMap() const { return currentMap; }
+
+	// 플레이어 반환 함수
+	inline Player* GetPlayer() const { return player; }
+
+	// 맵 클리어 플래그
+	inline void SetClearFlag(bool flag) { clearFlag = flag; }
 
 private:
 	void LoadMap(const char* mapFile);
 
 private:
-	EnemySpawner* enemySpawn = nullptr;
+	Spawner* enemySpawn = nullptr;
 
 	CameraManager* cameraManager = nullptr;
+
+	Map currentMap = Map::Map1;
 
 	Player* player = nullptr;
 
@@ -55,5 +72,12 @@ private:
 	int score = 0;
 
 	int life = 3;
+
+	// UI 문자열 버퍼.
+	char uiLife[20] = {};
+	char uiScore[20] = {};
+
+	// 맵 클리어 플래그.
+	bool clearFlag = false;
 };
 

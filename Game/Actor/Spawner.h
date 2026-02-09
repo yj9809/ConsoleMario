@@ -6,12 +6,12 @@
 
 using namespace Wanted;
 
-class EnemySpawner : public Actor
+class Spawner : public Actor
 {
-	RTTI_DECLARATIONS(EnemySpawner, Actor)
+	RTTI_DECLARATIONS(Spawner, Actor)
 
 public:
-	EnemySpawner(const std::vector<Vector2>& newEnemyPosition);
+	Spawner(const std::vector<Vector2>& newEnemyPosition);
 
 	virtual void BeginPlay() override;
 

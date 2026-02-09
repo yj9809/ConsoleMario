@@ -43,6 +43,9 @@ namespace Wanted
 		void SetPosition(const Vector2& newPosition);
 		inline Vector2 GetPosition() const { return position; }
 
+		// 액터의 높이 반환 함수.
+		inline int GetHeight() const { return height; }
+
 		// 오너십 추가/읽기 함수.
 		inline void SetOwner(Level* newOwner) { owner = newOwner; }
 		inline Level* GetOwner() const { return owner; }

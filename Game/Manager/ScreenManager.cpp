@@ -11,10 +11,10 @@ ScreenManager::ScreenManager()
 {
 	instance = this;
 
-	levels.emplace_back(new GameLevel());
 	levels.emplace_back(new MenuLevel());
+	levels.emplace_back(new GameLevel());
 
-	currentScreenType = ScreenType::Game;
+	currentScreenType = ScreenType::Title_Menu;
 
 	mainLevel = levels[0];
 }
@@ -31,14 +31,20 @@ ScreenManager::~ScreenManager()
 	levels.clear();
 }
 
-void ScreenManager::ToggleMenu()
+void ScreenManager::ToggleMenu(int num)
 {
-	int stateIndex = (int)currentScreenType;
-	int nextState = 1 - stateIndex;
-	currentScreenType = static_cast<ScreenType>(nextState);
-
 	// 메인 레벨 변경.
-	mainLevel = levels[static_cast<int>(currentScreenType)];
+	mainLevel = levels[num];
+}
+
+int ScreenManager::GetLife()
+{
+	return levels[0]->As<GameLevel>()->GetLife();
+}
+
+GameLevel* ScreenManager::GetGameLevel() const
+{
+	return levels[1]->As<GameLevel>();
 }
 
 ScreenManager& ScreenManager::Get()

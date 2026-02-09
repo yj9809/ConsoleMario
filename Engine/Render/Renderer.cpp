@@ -27,9 +27,9 @@ namespace Wanted
 		const int width = screenSize.x;
 		const int height = screenSize.y;
 
-		for(int y = 0; y < height; ++y)
+		for (int y = 0; y < height; ++y)
 		{
-			for(int x = 0; x < width; ++x)
+			for (int x = 0; x < width; ++x)
 			{
 				// 배열 인덱스 구하기.
 				const int index = (y * width) + x;
@@ -89,108 +89,13 @@ namespace Wanted
 		// 렌더 큐 순회하면서 프레임 채우기.
 		for (const RenderCommand& command : renderQueue)
 		{
-			// 화면에 그릴 텍스트가 없으면 건너뜀.
-			if (!command.text)
-			{
-				continue;
-			}
-
-			int localX = 0;
-			int localY = 0;
-
-			for (const char* p = command.text; *p != '\0'; ++p)
-			{
-				const char ch = *p;
-
-				// 줄바꿈 처리
-				if (ch == '\n')
-				{
-					localY++;
-					localX = 0;
-					continue;
-				}
-
-				const int drawX = command.position.x + localX - cameraX;
-				const int drawY = command.position.y + localY;
-
-				// 다음 문자로 이동
-				localX++;
-
-				// 화면 범위 밖이면 스킵
-				if (drawX < 0 || drawX >= viewportWidth ||
-					drawY < 0 || drawY >= screenSize.y)
-				{
-					continue;
-				}
-
-				const int index = (drawY * screenSize.x) + drawX;
-
-				// 그리기 우선순위 비교.
-				if (frame->sortingOrderArray[index] > command.sortingOrder)
-				{
-					continue;
-				}
-
-				// 데이터 기록.
-				frame->charInfoArray[index].Char.AsciiChar = ch;
-				frame->charInfoArray[index].Attributes = (WORD)command.color;
-
-				// 우선순위 업데이트.
-				frame->sortingOrderArray[index] = command.sortingOrder;
-			}
+			RenderLoop(command, false);
 		}
 
+		// UI 큐를 순회하며 UI 표시.
 		for (const RenderCommand& command : uiQueue)
 		{
-			// 화면에 그릴 텍스트가 없으면 건너뜀.
-			if (!command.text)
-			{
-				continue;
-			}
-
-			int localX = 0;
-			int localY = 0;
-
-			for (const char* p = command.text; *p != '\0'; ++p)
-			{
-				const char ch = *p;
-
-				// 줄바꿈 처리
-				if (ch == '\n')
-				{
-					localY++;
-					localX = 0;
-					continue;
-				}
-
-				const int drawX = command.position.x + localX;
-				const int drawY = command.position.y + localY;
-
-				// 다음 문자로 이동
-				localX++;
-
-				// 화면 범위 밖이면 스킵
-				if (drawX < 0 || drawX >= viewportWidth ||
-					drawY < 0 || drawY >= screenSize.y)
-				{
-					continue;
-				}
-
-				const int index = (drawY * screenSize.x) + drawX;
-
-				// 그리기 우선순위 비교.
-				if (frame->sortingOrderArray[index] > command.sortingOrder)
-				{
-					continue;
-				}
-
-				// 데이터 기록.
-				frame->charInfoArray[index].Char.AsciiChar = ch;
-				frame->charInfoArray[index].Attributes = (WORD)command.color;
-
-				// 우선순위 업데이트.
-				frame->sortingOrderArray[index] = command.sortingOrder;
-			}
+			RenderLoop(command, true);
 		}
 
 		// 그리기.
@@ -215,6 +120,65 @@ namespace Wanted
 		return *instance;
 	}
 
+	void Renderer::RenderLoop(const RenderCommand& command, bool isUI)
+	{
+		// 화면에 그릴 텍스트가 없으면 건너뜀.
+		if (!command.text)
+		{
+			return;
+		}
+
+		int localX = 0;
+		int localY = 0;
+
+		for (const char* p = command.text; *p != '\0'; ++p)
+		{
+			const char ch = *p;
+
+			// 줄바꿈 처리
+			if (ch == '\n')
+			{
+				localY++;
+				localX = 0;
+				continue;
+			}
+
+			if (ch == ' ')
+			{
+				localX++;
+				continue;
+			}
+
+			const int drawX = isUI ? command.position.x + localX : command.position.x + localX - cameraX;
+			const int drawY = command.position.y + localY;
+
+			// 다음 문자로 이동
+			localX++;
+
+			// 화면 범위 밖이면 스킵
+			if (drawX < 0 || drawX >= viewportWidth ||
+				drawY < 0 || drawY >= screenSize.y)
+			{
+				continue;
+			}
+
+			const int index = (drawY * screenSize.x) + drawX;
+
+			// 그리기 우선순위 비교.
+			if (frame->sortingOrderArray[index] > command.sortingOrder)
+			{
+				continue;
+			}
+
+			// 데이터 기록.
+			frame->charInfoArray[index].Char.AsciiChar = ch;
+			frame->charInfoArray[index].Attributes = (WORD)command.color;
+
+			// 우선순위 업데이트.
+			frame->sortingOrderArray[index] = command.sortingOrder;
+		}
+	}
+
 	void Renderer::Clear()
 	{
 		// 화면 지우기.
@@ -225,7 +189,7 @@ namespace Wanted
 		GetCurrentBuffer()->Clear();
 	}
 
-	void Renderer::Submit(const char* text, const Vector2& position, Color color, int sortingOrder)
+	void Renderer::Submit(const char* text, const Vector2& position, Color color, int sortingOrder, bool isUi)
 	{
 		// 렌더 데이터 생성 후 큐에 추가.
 		RenderCommand command = {};
@@ -234,18 +198,10 @@ namespace Wanted
 		command.color = color;
 		command.sortingOrder = sortingOrder;
 
-		renderQueue.emplace_back(command);
-	}
-
-	void Renderer::SubmitUI(const char* text, const Vector2& position, Color color, int sortingOrder)
-	{
-		RenderCommand command = {};
-		command.text = text;
-		command.position = position;
-		command.color = color;
-		command.sortingOrder = sortingOrder;
-
-		uiQueue.emplace_back(command);
+		if (!isUi)
+			renderQueue.emplace_back(command);
+		else
+			uiQueue.emplace_back(command);
 	}
 
 	void Renderer::Present()

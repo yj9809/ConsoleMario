@@ -45,13 +45,16 @@
     <ClCompile Include="Level\MenuLevel.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Actor\EnemySpawner.cpp">
+    <ClCompile Include="Actor\Spawner.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Actor\Enemy.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Manager\CameraManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor\MovePlatform.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,13 +89,16 @@
     <ClInclude Include="Level\MenuLevel.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Actor\EnemySpawner.h">
+    <ClInclude Include="Actor\Spawner.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Actor\Enemy.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Manager\CameraManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor\MovePlatform.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

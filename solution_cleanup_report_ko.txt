@@ -1,0 +1,87 @@
+﻿솔루션 코드 점검 보고서 (한국어)
+대상: C:\workspace\Project\ConsoleMario
+작성일: 2026-02-09
+
+요약
+- 현재 구조는 Engine(핵심 루프/렌더/입력)와 Game(게임 로직)이 분리되어 있고, 기능은 잘 나뉘어 있습니다.
+- 중복 코드는 주로 간단 Actor 클래스, 충돌/타입 분류 루프, 문자열/리소스 관리, 메뉴 렌더링 흐름에서 반복됩니다.
+- 중복 기능은 레벨 전환/메뉴 상태 처리, 충돌 판정(벽/바닥), UI 렌더링에서 보입니다.
+
+중복 코드/기능 파악
+1) 단순 Actor 클래스들의 생성자 중복
+- 파일: Game\Actor\Wall.*, FakeWall.*, Goal.*, FakeGoal.*, Coin.*
+- 공통점: 상속 + 이미지/색상만 다름 + 추가 로직 거의 없음
+- 정리 방향: StaticSpriteActor(혹은 TileActor) 같은 공통 베이스/팩토리로 통합하고, 맵 문자 -> 이미지/색상/충돌속성 설정 테이블로 관리
+
+2) 충돌 처리 루프의 반복
+- 파일: Game\Level\GameLevel.cpp
+- ProcessCollisionCoinAndPlayer / ProcessCollisionGoalAndPlayer / ProcessCollisionEnemyAndPlayer가 “타입별 수집 -> 교차 판정” 동일 패턴
+- 정리 방향: 템플릿/헬퍼 함수로 수집과 순회를 통합하거나, 태그/카테고리 기반 캐시 리스트(coinList, enemyList)를 유지
+
+3) 이동/충돌 판단 로직 중복
+- 파일: Game\Level\GameLevel.cpp
+- CanMove / IsOnGround / IsNextToGround 모두 액터 전체를 순회하며 벽/플랫폼 체크
+- 정리 방향: IsSolidAt(x,y), IsGroundAt(x,y) 같은 단일 쿼리 함수로 통합 후 Player/Enemy가 동일 API 사용
+
+4) Level에 동일 기능을 두 번 제공
+- 파일: Engine\Level\Level.*
+- AddNewActor, AddNewActorReturn가 사실상 동일 구현
+- 정리 방향: AddNewActor에서 포인터를 반환하도록 통합하고 기존 API는 래핑/삭제
+
+5) 문자열/리소스 관리 중복 및 수동 메모리 관리
+- 파일: Engine\Math\Vector2.*, Engine\Actor\Actor.*, Game\Level\MenuLevel.*
+- new/delete 및 SafeDelete/SafeDeleteArray 패턴이 반복됨
+- 정리 방향: std::string 사용으로 전환. 이미지/텍스트는 const std::string 또는 std::string_view로 관리
+
+6) 메뉴 렌더링 텍스트 출력 로직 반복
+- 파일: Game\Level\MenuLevel.cpp
+- 동일한 ASCII 아트 텍스트를 흰색+회색 그림자 두 번 출력
+- 정리 방향: DrawShadowedText(text, pos, fg, shadow) 같은 헬퍼 함수로 통합
+
+7) 레벨 전환/상태 처리 중복
+- 파일: Game\Manager\ScreenManager.*, Game\Level\MenuLevel.*, Game\Level\GameLevel.*
+- ScreenType 상태에 따라 메뉴/레벨 전환 로직이 분산됨
+- 정리 방향: 상태 머신(ScreenStateController)로 전환 로직을 한 곳에서 결정하도록 통합
+
+정리하면 좋은 지점(우선순위)
+1) 타입 수집/충돌 루프 최적화
+- 매 Tick마다 벡터를 새로 만드는 구조는 반복 비용이 큼
+- 액터 추가/삭제 시점에 캐시 리스트 갱신하는 방식으로 개선
+
+2) 충돌 판정 API 통합
+- CanMove/IsOnGround/IsNextToGround를 하나의 월드 질의 API로 통합하면 Enemy/Player/플랫폼 모두 일관된 판정 사용 가능
+
+3) 단순 Actor 데이터화
+- 맵 문자와 Actor 생성 로직을 테이블화하면 신규 오브젝트 추가가 쉬움
+- 예: struct TileDef { char symbol; const char* sprite; Color color; bool solid; } 방식
+
+4) 수동 메모리 정리 제거
+- std::string과 std::vector로 전환하면 SafeDelete 계열을 줄일 수 있음
+- MenuItem과 Actor의 이미지 관리가 단순해짐
+
+5) 메뉴/상태 화면 렌더링 통합
+- 상태별 공통 출력 로직을 헬퍼 함수로 분리하여 코드 가독성 향상
+
+정리/리팩터링 제안 순서
+1) Actor 기반 충돌 API 정리
+- GameLevel에 IsSolidAt, IsGroundAt 추가 후 Player/Enemy/MovePlatform에서 사용하도록 변경
+
+2) 타입 수집 캐시 추가
+- Level 또는 GameLevel에 coinList/enemyList/goalList 캐시 유지
+- AddNewActor/Destroy 처리 시 캐시 업데이트
+
+3) 단순 Actor를 데이터 기반 생성으로 변경
+- GameLevel::LoadMap에서 문자 -> 정의 테이블로 통합
+
+4) 문자열 메모리 전환
+- Actor 이미지, MenuItem text를 std::string으로 변경
+- Vector2::ToString 대신 std::string 반환 또는 std::ostream 지원
+
+5) MenuLevel 렌더링 헬퍼화
+- DrawShadowedText, DrawTitleLogo 등으로 분리
+
+부가적으로 확인된 정리 포인트
+- GameLevel::CanMove에서 MovePlatform 높이를 1로 고정(주석). Actor에 GetHeight가 있으므로 실제 높이로 판정 통일 가능
+- ScreenManager에서 levels[0]/levels[1] 직접 인덱싱은 취약하므로 enum->index 매핑 또는 명시적 멤버로 교체 권장
+
+끝.

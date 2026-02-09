@@ -33,6 +33,9 @@ public:
 	// 리스폰 함수.
 	void RespawnAt(const Vector2& pos);
 
+	// 플랫폼 이동 동기화 함수.
+	void AddPlatformMove(const Vector2& delta);
+
 private:
 	virtual void BeginPlay() override;
 	virtual void Tick(float deltaTime) override;

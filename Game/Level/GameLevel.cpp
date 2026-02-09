@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "GameLevel.h"
+#include "Manager/ScreenManager.h"
 #include "Render/Renderer.h"
 #include "Actor/Goal.h"
 #include "Actor/FakeGoal.h"
@@ -8,6 +9,7 @@
 #include "Actor/FakeWall.h"
 #include "Actor/Coin.h"
 #include "Actor/Enemy.h"
+#include "Actor/MovePlatform.h"
 
 GameLevel::GameLevel()
 {
@@ -25,27 +27,59 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
-	super::Tick(deltaTime);
 
-	ProcessCollisionCoinAndPlayer();
-	ProcessCollisionGoalAndPlayer();
-	ProcessCollisionEnemyAndPlayer();
+	if (!clearFlag)
+	{
+		super::Tick(deltaTime);
+		ProcessCollisionCoinAndPlayer();
+		ProcessCollisionGoalAndPlayer();
+		ProcessCollisionEnemyAndPlayer();
 
-	cameraManager->Update(player->GetPosition().x);
-	Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());
+		cameraManager->Update(player->GetPosition().x);
+		Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());
+	}
+	else
+	{
+		clearFlag = false;
+		for(Actor* actor : actors)
+		{
+			if (actor)
+			{
+				actor->Destroy();
+			}
+		}
+
+		if(currentMap == Map::Map1)
+		{
+			currentMap = Map::Map2;
+			LoadMap("1-2.txt");
+		}
+		else if(currentMap == Map::Map2)
+		{
+			currentMap = Map::Map3;
+			LoadMap("1-3.txt");
+		}
+		else if(currentMap == Map::Map3)
+		{
+			// Todo: 게임 클리어 처리.
+			ScreenManager::Get().currentScreenType = ScreenType::GameClear;
+			ScreenManager::Get().ToggleMenu(0);
+		}
+
+		player = AddNewActorReturn(new Player())->As<Player>();
+		
+		cameraManager = new CameraManager(120, worldWidth);
+	}
 }
 
 void GameLevel::Draw()
 {
     super::Draw();
 
-	char uiLife[20] = {};
-	char uiScore[20] = {};
-
 	sprintf_s(uiLife, 20, "LIFE: %d", life);
-	Renderer::Get().SubmitUI(uiLife, Vector2(0, 0), Color::White, 1000);
+	Renderer::Get().Submit(uiLife, Vector2(0, 0), Color::White, 1000, true);
 	sprintf_s(uiScore, 20, "SCORE: %d", score);
-	Renderer::Get().SubmitUI(uiScore, Vector2(0, 1), Color::White, 1000);
+	Renderer::Get().Submit(uiScore, Vector2(0, 1), Color::White, 1000, true);
 }
 
 void GameLevel::Spawn()
@@ -79,7 +113,7 @@ void GameLevel::ProcessCollisionCoinAndPlayer()
 		if (coin->TestIntersect(player))
 		{
 			coin->Destroy();
-			score++;
+			score += 10;
 			continue;
 		}
 	}
@@ -105,11 +139,11 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 
 	for (Actor* const goal : goals)
 	{
-		if (goal->TestIntersect(player))
+		if (goal->TestIntersect(player) && player->GetState() != Player::State::Clear)
 		{
 			int y = player->GetPosition().y;
-			player->As<Player>()->SetClear();
 			score += 130 - y;
+			player->As<Player>()->SetClear();
 			continue;
 		}
 	}
@@ -146,7 +180,10 @@ void GameLevel::ProcessCollisionEnemyAndPlayer()
 			}
 			else 
 			{
+				ScreenManager::Get().currentScreenType = ScreenType::Respawn;
+				ScreenManager::Get().ToggleMenu(0);
 				player->RespawnAt(Vector2::SpawnPoint);
+				life--;
 				CameraResetToSpawn();
 			}
 		}
@@ -165,48 +202,43 @@ int GameLevel::GetCameraXPosition()
 
 bool GameLevel::CanMove(const Vector2& nextPosition)
 {
-	// 레벨에 있는 벽 액터 수집.
-	std::vector<Actor*> walls;
-
 	for (Actor* const actor : actors)
 	{
-		if (actor->IsTypeOf<Wall>())
+		if (actor->IsTypeOf<Wall>() || actor->IsTypeOf<MovePlatform>())
 		{
-			walls.push_back(actor);
-			continue;
+			const int ax = actor->GetPosition().x;
+			const int ay = actor->GetPosition().y;
+			const int aw = actor->GetWidth();
+			const int ah = 1; // MovePlatform은 2줄인데, Actor에 높이 getter가 없으면 1로만 체크
+
+			const bool insideX = (nextPosition.x >= ax) && (nextPosition.x <= ax + aw - 1);
+			const bool insideY = (nextPosition.y >= ay) && (nextPosition.y <= ay + ah - 1);
+
+			if (insideX && insideY)
+				return false;
 		}
 	}
-
-	for (Actor* const wall : walls)
-	{
-		if (wall->GetPosition() == nextPosition)
-		{
-			return false;
-		}
-	}
-
 	return true;
 }
 
 bool GameLevel::IsOnGround(const Vector2& playerDownPosition)
 {
-	// 레벨에 있는 땅 액터 수집.
-	std::vector<Actor*> grounds;
-
 	for (Actor* actor : actors)
 	{
-		if (actor->IsTypeOf<Wall>())
+		if (actor->IsTypeOf<Wall>() || actor->IsTypeOf<MovePlatform>())
 		{
-			grounds.push_back(actor);
-			continue;
-		}
-	}
+			int gx = actor->GetPosition().x;
+			int gy = actor->GetPosition().y;
+			int gw = actor->GetWidth();
 
-	for (Actor* ground : grounds)
-	{
-		if (ground->GetPosition() == playerDownPosition)
-		{
-			return true;
+			bool isOn = (playerDownPosition.y == gy) &&
+				(playerDownPosition.x >= gx) &&
+				(playerDownPosition.x <= gx + gw - 1);
+
+			if (isOn)
+			{
+				return true;
+			}
 		}
 	}
 	return false;
@@ -270,6 +302,9 @@ void GameLevel::LoadMap(const char* mapFile)
 	// 적 위치 저장 배열.
 	std::vector<Vector2> enemyPositions;
 
+	std::vector<Vector2> startPositions;
+	std::vector<Vector2> endPositions;
+
 	while (true)
 	{
 		if (index >= fileSize)
@@ -308,6 +343,12 @@ void GameLevel::LoadMap(const char* mapFile)
 			// 배열에 위치 값을 전부 저장.
 			enemyPositions.emplace_back(position);
 			break;
+		case 'M':
+			startPositions.emplace_back(position);
+			break;
+		case 'N':
+			endPositions.emplace_back(position);
+			break;
 		}
 		++position.x;
 	}
@@ -318,7 +359,12 @@ void GameLevel::LoadMap(const char* mapFile)
 	if (enemyPositions.size() > 0)
 	{
 		// 적 스포너 액터 추가.
-		enemySpawn = AddNewActorReturn(new EnemySpawner(enemyPositions))->As<EnemySpawner>();
+		enemySpawn = AddNewActorReturn(new Spawner(enemyPositions))->As<Spawner>();
+	}
+
+	for (int ix = 0; ix < startPositions.size(); ix++)
+	{
+		AddNewActor(new MovePlatform(startPositions[ix], endPositions[ix]));
 	}
 
 	delete[] buffer;
