@@ -112,9 +112,12 @@ void GameLevel::ProcessCollisionCoinAndPlayer()
 	{
 		if (coin->TestIntersect(player))
 		{
-			coin->Destroy();
-			score += 10;
-			continue;
+			if (player->GetState() != Player::State::Death)
+			{
+				coin->Destroy();
+				score += 10;
+				continue;
+			}
 		}
 	}
 }
@@ -139,7 +142,7 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 
 	for (Actor* const goal : goals)
 	{
-		if (goal->TestIntersect(player) && player->GetState() != Player::State::Clear)
+		if (goal->TestIntersect(player) && (player->GetState() != Player::State::Clear || player->GetState() != Player::State::Death))
 		{
 			int y = player->GetPosition().y;
 			score += 130 - y;

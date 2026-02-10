@@ -64,6 +64,7 @@ public:
 
 	inline void ResetPosition()
 	{
+		currentState = State::Idle;
 		SetPosition(Vector2::SpawnPoint); 
 		xPosition = position.x; 
 		yPosition = position.y;
