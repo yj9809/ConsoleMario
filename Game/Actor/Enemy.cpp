@@ -21,12 +21,19 @@ void Enemy::BeginPlay()
 	{
 		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
 	}
+	yPosition = position.y;
 }
 
 void Enemy::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 
+	if (isDestroyed)
+	{
+		
+		DestroyMotion(deltaTime);
+		return;
+	}
 	Move(deltaTime);
 }
 
@@ -44,6 +51,20 @@ void Enemy::Move(float deltaTime)
 	xPosition += (moveSpeed * deltaTime) * moveDirection;
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(position.y)));
+}
+
+void Enemy::DestroyMotion(float deltaTime)
+{
+	velocityY += gravity * deltaTime;
+	yPosition += velocityY * deltaTime;
+	xPosition += velocityX * deltaTime;
+
+	if(position.y > ScreenManager::Get().GetHeight())
+	{
+		Destroy();
+	}
+
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
 
 bool Enemy::WallCheck(int x, int y)

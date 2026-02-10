@@ -5,6 +5,7 @@
 #include "Util/Util.h"
 
 #include "Interface/ICanPlayerMove.h"
+
 using namespace Wanted;
 
 class Player : public Actor
@@ -19,6 +20,7 @@ public:
 		Jumping,
 		Falling,
 		Clear,
+		Death
 	};
 
 public:
@@ -28,7 +30,44 @@ public:
 
 	void ClearMove(float deltaTime);
 
+	inline void SetDeath(State state, bool left)
+	{
+		currentState = state;
+
+		// 기본값 설정.
+		deathVelocityX = 20.0f;
+		deathVelocityY = -15.0f;
+		deathGravity = 50.0f;
+
+		// 방향 전환.
+		// 플레이어가 적 왼쪽에서 충돌했으면 왼쪽으로 날아가고,
+		// 오른쪽에서 충돌했으면 오른쪽으로 날아가도록 설정.
+		SetDeathVelocityX(left);
+
+		// 현재 좌표 동기화.
+		xPosition = position.x;
+		yPosition = position.y;
+	}
+
+	inline void SetDeathVelocityX(bool left)
+	{
+		if (left)
+		{
+			deathVelocityX = -Util::Abs(deathVelocityX);
+		}
+		else
+		{
+			deathVelocityX = Util::Abs(deathVelocityX);
+		}
+	}
 	inline State GetState() { return currentState; }
+
+	inline void ResetPosition()
+	{
+		SetPosition(Vector2::SpawnPoint); 
+		xPosition = position.x; 
+		yPosition = position.y;
+	}
 
 	// 리스폰 함수.
 	void RespawnAt(const Vector2& pos);
@@ -46,9 +85,14 @@ private:
 
 	void Jump(float deltaTime);
 	void Fall();
+
+	void DeathMotion(float deltaTime);
 	
 	// 가속도 설정 함수.
 	void SetWeight(float& weight, float deltaTime);
+
+	inline int GetLife() const;
+	
 
 private:
 	ICanPlayerMove* canPlayerMove = nullptr;
@@ -80,6 +124,11 @@ private:
 
 	// 낙하 중력 변수.
 	float fallGravity = 200.0f;
+
+	// 사망 모션 변수.
+	float deathGravity = 0.0f;
+	float deathVelocityX = 0.0f;
+	float deathVelocityY = -0.0f;
 
 	// 바닥 체크 플래그.
 	bool isGround = false;

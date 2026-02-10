@@ -37,6 +37,13 @@ void Player::Tick(float deltaTime)
 		return;
 	}
 
+	if(currentState == State::Death)
+	{
+		// 사망 모션 처리.
+		DeathMotion(deltaTime);
+		return;
+	}
+
 	if (ESC_DOWN)
 	{
 		ScreenManager::Get().ToggleMenu((int)ScreenType::Title_Menu);
@@ -210,32 +217,37 @@ void Player::Fall()
 	// 플레이어 포지션이 화면 아래로 벗어났는지 체크.
 	if (position.y > ScreenManager::Get().GetHeight())
 	{
-		// 라이프가 남아있는지 체크.
-		if (GetOwner()->As<GameLevel>()->GetLife() > 0)
-		{
-			ScreenManager::Get().currentScreenType = ScreenType::Respawn;
-			ScreenManager::Get().ToggleMenu(0);
-			// 라이프 감소 및 초기 위치로 리스폰.
-			GetOwner()->As<GameLevel>()->SetLife();
-			RespawnAt(Vector2::SpawnPoint);
-		}
-		else
-		{
-			// Todo: 추후 게임 오버 처리 다시 해야함
-			QuitGame();
-		}
+		RespawnAt(Vector2::SpawnPoint);
 	}
+}
+
+void Player::DeathMotion(float deltaTime)
+{
+	deathVelocityY += deathGravity * deltaTime;
+	yPosition += deathVelocityY * deltaTime;
+	xPosition += deathVelocityX * deltaTime;
+
+	if (position.y > ScreenManager::Get().GetHeight())
+	{
+		RespawnAt(Vector2::SpawnPoint);
+	}
+
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 }
 
 // 낙사, 몬스터 충돌 등으로 플레이어가 리스폰할 때 호출되는 함수.
 inline void Player::RespawnAt(const Vector2& pos)
 {
-	if (GetOwner()->As<GameLevel>()->GetLife() > 0)
+	if (GetLife() > 0)
 	{
+		ScreenManager::Get().currentScreenType = ScreenType::Respawn;
+		ScreenManager::Get().ToggleMenu(0);
 		xPosition = pos.x;
 		yPosition = pos.y;
 		SetPosition(Vector2::SpawnPoint);
 
+		// 라이프 감소 및 초기 위치로 리스폰.
+		GetOwner()->As<GameLevel>()->SetLife();
 		GetOwner()->As<GameLevel>()->Spawn();
 		GetOwner()->As<GameLevel>()->CameraResetToSpawn();
 
@@ -243,8 +255,8 @@ inline void Player::RespawnAt(const Vector2& pos)
 	}
 	else
 	{
-		// Todo: 추후 게임 오버 처리 다시 해야함
-		QuitGame();
+		ScreenManager::Get().currentScreenType = ScreenType::GameOver;
+		ScreenManager::Get().ToggleMenu(0);
 	}
 }
 
@@ -263,13 +275,18 @@ inline void Player::SetWeight(float& weight, float deltaTime)
 	Util::Clamp(weight, 0.0f, 15.0f);
 }
 
+inline int Player::GetLife() const
+{
+	return GetOwner()->As<GameLevel>()->GetLife();
+}
+
 void Player::ClearMove(float deltaTime)
 {
 	if (yPosition < 26.0f) 
 	{
 		yPosition += moveSpeed * deltaTime;
 	}
-	else if (xPosition < GetOwner()->As<GameLevel>()->GetCameraXPosition())
+	else if (xPosition < ScreenManager::Get().GetWidth())
 	{
 		xPosition += moveSpeed * deltaTime;
 	}

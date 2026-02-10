@@ -171,20 +171,20 @@ void GameLevel::ProcessCollisionEnemyAndPlayer()
 	{
 		if (player->TestIntersect(enemy))
 		{
-			if (player->GetState() == Player::State::Falling)
+			if (!enemy->As<Enemy>()->GetIsDestroyed())
 			{
-				enemySpawn->RemoveEnemy(enemy);
-				enemy->Destroy();
-				score += 50;
-				continue;
-			}
-			else 
-			{
-				ScreenManager::Get().currentScreenType = ScreenType::Respawn;
-				ScreenManager::Get().ToggleMenu(0);
-				player->RespawnAt(Vector2::SpawnPoint);
-				life--;
-				CameraResetToSpawn();
+				if (player->GetState() == Player::State::Falling)
+				{
+					enemySpawn->RemoveEnemy(enemy);
+					enemy->As<Enemy>()->SetIsDestroyed();
+					score += 50;
+					continue;
+				}
+				else
+				{
+					player->SetDeath(Player::State::Death, player->GetPosition().x < enemy->GetPosition().x);
+					CameraResetToSpawn();
+				}
 			}
 		}
 	}

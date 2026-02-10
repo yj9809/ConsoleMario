@@ -90,6 +90,12 @@ namespace Util
 	{
 		value = value < min ? min : value > max ? max : value;
 	}
+
+	template<typename T>
+	inline T Abs(const T& value)
+	{
+		return value < static_cast<T>(0) ? -value : value;
+	}
 }
 
 // 메모리 정리 함수.

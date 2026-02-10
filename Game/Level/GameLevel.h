@@ -45,6 +45,14 @@ public:
 
 	virtual bool IsNextToGround(const Wanted::Vector2& enemyNextPosition) override;
 
+	inline void Init()
+	{
+		cameraManager->ResetToSpawn(Vector2::SpawnPoint.x);
+		player->ResetPosition();
+		score = 0;
+		life = 3;
+		currentMap = Map::Map1;
+	}
 	inline int GetLife() const { return life; }
 	inline void SetLife() { life--; }
 	inline Map GetCurrentMap() const { return currentMap; }
