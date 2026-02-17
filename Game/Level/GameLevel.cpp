@@ -10,6 +10,7 @@
 #include "Actor/Coin.h"
 #include "Actor/Enemy.h"
 #include "Actor/MovePlatform.h"
+#include "Manager/ScreenManager.h"
 
 GameLevel::GameLevel()
 {

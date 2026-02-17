@@ -140,7 +140,6 @@ private:
 	// 바닥 체크 플래그.
 	bool isGround = false;
 
-
 	// test: 충돌 컴포넌트.
 	CollisionComponent collisionComponent;
 

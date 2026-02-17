@@ -21,8 +21,11 @@ Enemy::Enemy(const Vector2& position)
 
 Enemy::~Enemy()
 {
-	component.OnDisable(ScreenManager::Get().GetCollisionSystem());
-	ScreenManager::Get().GetCollisionSystem().ClearListener(component.GetColliderID());
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	cs.ClearListener(component.GetColliderID());
+	component.OnDisable(cs);
+
+	super::OnDestroy();
 }
 
 void Enemy::BeginPlay()
@@ -79,6 +82,8 @@ void Enemy::DestroyMotion(float deltaTime)
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	collisionPosition.x = static_cast<int>(xPosition);
+	collisionPosition.y = static_cast<int>(position.y);
 }
 
 bool Enemy::WallCheck(int x, int y)
