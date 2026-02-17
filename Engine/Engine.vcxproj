@@ -66,7 +66,8 @@
     <PreBuildEvent>
       <Command>xcopy *.h ..\Includes\Engine\ /e /y
 
-xcopy ..\Config\* $(OutDir)..\Config\ /e /y</Command>
+xcopy ..\Config\* $(OutDir)..\Config\ /e /y
+xcopy ..\Assets\* $(OutDir)..\Assets\ /e /y</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy $(OutDir)\Engine.dll ..\Library\Engine\$(Platform)\$(Configuration)\ /e /y
@@ -91,7 +92,8 @@ xcopy $(OutDir)\Engine.lib ..\Library\Engine\$(Platform)\$(Configuration)\ /e /y
     <PreBuildEvent>
       <Command>xcopy *.h ..\Includes\Engine\ /e /y
 
-xcopy ..\Config\* $(OutDir)..\Config\ /e /y</Command>
+xcopy ..\Config\* $(OutDir)..\Config\ /e /y
+xcopy ..\Assets\* $(OutDir)..\Assets\ /e /y</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy $(OutDir)\Engine.dll ..\Library\Engine\$(Platform)\$(Configuration)\ /e /y

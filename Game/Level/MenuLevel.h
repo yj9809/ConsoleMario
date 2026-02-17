@@ -24,7 +24,7 @@ struct MenuItem
 
 	~MenuItem()
 	{
-		SafeDelete(text);
+		SafeDeleteArray(text);
 	}
 
 	// 메뉴 텍스트.

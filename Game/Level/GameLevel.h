@@ -17,6 +17,7 @@ class GameLevel : public Level, public ICanPlayerMove
 public:
 	enum class Map
 	{
+		Start,
 		Map1,
 		Map2,
 		Map3,
@@ -47,11 +48,31 @@ public:
 
 	inline void Init()
 	{
+		if (actors.size())
+		{
+			for (Actor* const actor : actors)
+			{
+				actor->Destroy();
+			}
+			ProcessAddAndDestroyActors();
+		}
+
 		cameraManager->ResetToSpawn(Vector2::SpawnPoint.x);
 		player->ResetPosition();
+		clearFlag = false;
 		score = 0;
 		life = 3;
 		currentMap = Map::Map1;
+		LoadMap("1-1.txt");
+
+		if(cameraManager)
+		{
+			SafeDelete(cameraManager);
+		}
+
+		player = AddNewActorReturn(new Player())->As<Player>();
+
+		cameraManager = new CameraManager(120, worldWidth);
 	}
 	inline int GetLife() const { return life; }
 	inline void SetLife() { life--; }
@@ -71,7 +92,7 @@ private:
 
 	CameraManager* cameraManager = nullptr;
 
-	Map currentMap = Map::Map1;
+	Map currentMap = Map::Start;
 
 	Player* player = nullptr;
 

@@ -27,6 +27,9 @@ namespace Wanted
 		virtual void Tick(float deltaTime);
 		virtual void Draw();
 
+		// Todo: 추후 사망 모션 리펙토링 필요.
+		//virtual void DeathMotion(float deltaTime);
+
 		// 삭제 요청 함수.
 		void Destroy();
 

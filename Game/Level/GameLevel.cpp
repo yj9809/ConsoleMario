@@ -13,8 +13,6 @@
 
 GameLevel::GameLevel()
 {
-	LoadMap("1-1.txt");
-
 	player = AddNewActorReturn(new Player())->As<Player>();
 
 	cameraManager = new CameraManager(120, worldWidth);
@@ -27,6 +25,11 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
+	if (ScreenManager::Get().currentScreenType == ScreenType::Start)
+	{
+		Init();
+		ScreenManager::Get().currentScreenType = ScreenType::Game;
+	}
 
 	if (!clearFlag)
 	{
@@ -41,40 +44,52 @@ void GameLevel::Tick(float deltaTime)
 	else
 	{
 		clearFlag = false;
-		for(Actor* actor : actors)
+		if(actors.size() > 0)
 		{
-			if (actor)
+			for (Actor* const actor : actors)
 			{
 				actor->Destroy();
 			}
+			//actors.clear();
+			ProcessAddAndDestroyActors();
 		}
 
-		if(currentMap == Map::Map1)
+		if (currentMap == Map::Start)
+		{
+			currentMap = Map::Map1;
+			LoadMap("1-1.txt");
+		}
+		else if (currentMap == Map::Map1)
 		{
 			currentMap = Map::Map2;
 			LoadMap("1-2.txt");
 		}
-		else if(currentMap == Map::Map2)
+		else if (currentMap == Map::Map2)
 		{
 			currentMap = Map::Map3;
 			LoadMap("1-3.txt");
 		}
-		else if(currentMap == Map::Map3)
+		else if (currentMap == Map::Map3)
 		{
 			// Todo: 게임 클리어 처리.
 			ScreenManager::Get().currentScreenType = ScreenType::GameClear;
 			ScreenManager::Get().ToggleMenu(0);
 		}
 
+		if (cameraManager)
+		{
+			SafeDelete(cameraManager);
+		}
+
 		player = AddNewActorReturn(new Player())->As<Player>();
-		
+
 		cameraManager = new CameraManager(120, worldWidth);
 	}
 }
 
 void GameLevel::Draw()
 {
-    super::Draw();
+	super::Draw();
 
 	sprintf_s(uiLife, 20, "LIFE: %d", life);
 	Renderer::Get().Submit(uiLife, Vector2(0, 0), Color::White, 1000, true);
@@ -139,17 +154,20 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 	{
 		return;
 	}
-
-	for (Actor* const goal : goals)
+	if (player->GetState() != Player::State::Death)
 	{
-		if (goal->TestIntersect(player) && (player->GetState() != Player::State::Clear || player->GetState() != Player::State::Death))
+		for (Actor* const goal : goals)
 		{
-			int y = player->GetPosition().y;
-			score += 130 - y;
-			player->As<Player>()->SetClear();
-			continue;
+			if (goal->TestIntersect(player) && player->GetState() != Player::State::Clear)
+			{
+				int y = player->GetPosition().y;
+				score += 130 - y;
+				player->As<Player>()->SetClear();
+				continue;
+			}
 		}
 	}
+	
 }
 
 void GameLevel::ProcessCollisionEnemyAndPlayer()

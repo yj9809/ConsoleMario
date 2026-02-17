@@ -11,6 +11,7 @@ class GameLevel;
 enum class ScreenType
 {
 	Title_Menu,
+	Start,
 	Game,
 	Respawn,
 	GameOver,

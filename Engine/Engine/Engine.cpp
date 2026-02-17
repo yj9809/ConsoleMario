@@ -153,6 +153,8 @@ namespace Wanted
 		// 정리 작업.
 		std::cout << "Engine has been shutdown....\n";
 
+		mainLevel->ProcessAddAndDestroyActors();
+
 		// 커서 켜기.
 		Util::TurnOnCursor();
 	}

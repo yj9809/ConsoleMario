@@ -14,9 +14,9 @@ MenuLevel::MenuLevel()
 		[]()
 		{
 			// 게임 레벨로 전환.
-			ScreenManager::Get().currentScreenType = ScreenType::Game;
-			ScreenManager::Get().ToggleMenu((int)ScreenType::Game);
-			ScreenManager::Get().GetGameLevel()->Init();
+			ScreenManager::Get().currentScreenType = ScreenType::Start;
+			ScreenManager::Get().ToggleMenu(1);
+			//ScreenManager::Get().GetGameLevel()->Init();
 		}
 	));
 
@@ -25,7 +25,7 @@ MenuLevel::MenuLevel()
 		[]()
 		{
 			// 메뉴 토글 함수 호출.
-			ScreenManager::Get().ToggleMenu((int)ScreenType::Game);
+			ScreenManager::Get().ToggleMenu(1);
 		}
 	));
 
@@ -53,7 +53,7 @@ MenuLevel::MenuLevel()
 			}
 
 			ScreenManager::Get().currentScreenType = ScreenType::Game;
-			ScreenManager::Get().ToggleMenu((int)ScreenType::Game);
+			ScreenManager::Get().ToggleMenu(1);
 		}
 	));
 

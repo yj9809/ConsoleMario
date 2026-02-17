@@ -22,6 +22,17 @@ namespace Wanted
 
 		// 배열 초기화.
 		actors.clear();
+
+		for(Actor*& actor : addRequestedActors)
+		{
+			// 액터 객체 메모리 해제.
+			if(actor)
+			{
+				delete actor;
+				actor = nullptr;
+			}
+		}
+		addRequestedActors.clear();
 	}
 
 	void Level::BeginPlay()
