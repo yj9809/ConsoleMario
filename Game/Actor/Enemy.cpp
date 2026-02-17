@@ -11,6 +11,18 @@ Enemy::Enemy(const Vector2& position)
 	: super("EEE\nEEE\nE E", position, Color::Blue), xPosition(static_cast<float>(position.x))
 {
 	sortingOrder = 7;
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	component = CollisionComponent(false, CollisionLayer::Enemy, GetLayerMask(CollisionLayer::Player) | GetLayerMask(CollisionLayer::Platform), width, height);
+	collisionPosition.x = position.x;
+	collisionPosition.y = position.y;
+	component.OnEnable(cs, &collisionPosition);
+	cs.SetListener(component.GetColliderID(), this, nullptr);
+}
+
+Enemy::~Enemy()
+{
+	component.OnDisable(ScreenManager::Get().GetCollisionSystem());
+	ScreenManager::Get().GetCollisionSystem().ClearListener(component.GetColliderID());
 }
 
 void Enemy::BeginPlay()
@@ -51,6 +63,8 @@ void Enemy::Move(float deltaTime)
 	xPosition += (moveSpeed * deltaTime) * moveDirection;
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(position.y)));
+	collisionPosition.x = position.x;
+	collisionPosition.y = position.y;
 }
 
 void Enemy::DestroyMotion(float deltaTime)

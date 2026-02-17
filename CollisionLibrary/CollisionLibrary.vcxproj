@@ -10,16 +10,25 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Component\CollisionComponent.h" />
+    <ClInclude Include="System\CollisionSystem.h" />
+    <ClInclude Include="Util\CollisionTypes.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Component\CollisionComponent.cpp" />
+    <ClCompile Include="System\CollisionSystem.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>17.0</VCProjectVersion>
+    <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{666718e5-9387-4225-9599-28be3024e020}</ProjectGuid>
-    <RootNamespace>Game</RootNamespace>
+    <ProjectGuid>{f2e635ed-0b9d-4e24-8866-5b260495f20f}</ProjectGuid>
+    <RootNamespace>CollisionLibrary</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -27,7 +36,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -44,12 +53,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
+    <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -57,18 +62,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;..\Engine;..\CollisionLibrary;</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Library\Engine\$(Platform)\$(Configuration)\;..\Library\CollisionLibrary\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Engine.lib;$(CoreLibraryDependencies);CollisionLibrary.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy ..\Library\Engine\$(Platform)\$(Configuration)\Engine.dll $(OutDir)\ /e /y
-
-xcopy ..\Library\CollisionLibrary\$(Platform)\$(Configuration)\CollisionLibrary.lib $(OutDir)\ /e /y</Command>
+      <Command>xcopy $(OutDir)\CollisionLibrary.lib ..\Library\CollisionLibrary\$(Platform)\$(Configuration)\ /e /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -79,50 +81,13 @@ xcopy ..\Library\CollisionLibrary\$(Platform)\$(Configuration)\CollisionLibrary.
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\;..\Engine</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Library\Engine\$(Platform)\$(Configuration)\;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Engine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy ..\Library\Engine\$(Platform)\$(Configuration)\Engine.dll $(OutDir)\ /e /y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Actor\Coin.cpp" />
-    <ClCompile Include="Actor\Enemy.cpp" />
-    <ClCompile Include="Actor\MovePlatform.cpp" />
-    <ClCompile Include="Actor\Spawner.cpp" />
-    <ClCompile Include="Actor\FakeGoal.cpp" />
-    <ClCompile Include="Actor\FakeWall.cpp" />
-    <ClCompile Include="Actor\Goal.cpp" />
-    <ClCompile Include="Actor\Player.cpp" />
-    <ClCompile Include="Actor\Wall.cpp" />
-    <ClCompile Include="Level\GameLevel.cpp" />
-    <ClCompile Include="Level\MenuLevel.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Manager\CameraManager.cpp" />
-    <ClCompile Include="Manager\ScreenManager.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Actor\Coin.h" />
-    <ClInclude Include="Actor\Enemy.h" />
-    <ClInclude Include="Actor\MovePlatform.h" />
-    <ClInclude Include="Actor\Spawner.h" />
-    <ClInclude Include="Actor\FakeGoal.h" />
-    <ClInclude Include="Actor\FakeWall.h" />
-    <ClInclude Include="Actor\Goal.h" />
-    <ClInclude Include="Actor\Player.h" />
-    <ClInclude Include="Actor\Wall.h" />
-    <ClInclude Include="Interface\ICanPlayerMove.h" />
-    <ClInclude Include="Level\GameLevel.h" />
-    <ClInclude Include="Level\MenuLevel.h" />
-    <ClInclude Include="Manager\CameraManager.h" />
-    <ClInclude Include="Manager\ScreenManager.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

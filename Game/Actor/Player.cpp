@@ -17,6 +17,12 @@ Player::Player()
 	: super(" P \n/|\\\n/ \\", Vector2::SpawnPoint, Color::Red), yPosition(position.y)
 {
 	sortingOrder = 10;
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	collisionComponent = CollisionComponent(false, CollisionLayer::Player, GetLayerMask(CollisionLayer::Enemy) | GetLayerMask(CollisionLayer::Platform), width, height);
+	collisionPosition.x = position.x;
+	collisionPosition.y = position.y;
+	collisionComponent.OnEnable(cs, &collisionPosition);
+	cs.SetListener(collisionComponent.GetColliderID(), this, &Player::OnCollisionThunk);
 }
 
 void Player::BeginPlay()
@@ -106,6 +112,7 @@ void Player::MoveRight(float deltaTime)
 		xPosition = static_cast<float>(ScreenManager::Get().GetWidth() - width);
 	}
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 
 void Player::MoveLeft(float deltaTime)
@@ -125,7 +132,8 @@ void Player::MoveLeft(float deltaTime)
 		xPosition = position.x;
 	}
 
-	SetPosition(Vector2((int)(xPosition), (int)(yPosition)));
+	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 
 void Player::Jump(float deltaTime)
@@ -197,6 +205,7 @@ void Player::Jump(float deltaTime)
 
 	// 위치 업데이트.
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 
 void Player::Fall()
@@ -233,6 +242,7 @@ void Player::DeathMotion(float deltaTime)
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 
 // 낙사, 몬스터 충돌 등으로 플레이어가 리스폰할 때 호출되는 함수.
@@ -265,6 +275,7 @@ void Player::AddPlatformMove(const Vector2& delta)
 	xPosition += delta.x;
 	yPosition += delta.y;
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 
 inline void Player::SetWeight(float& weight, float deltaTime)
@@ -278,6 +289,26 @@ inline void Player::SetWeight(float& weight, float deltaTime)
 inline int Player::GetLife() const
 {
 	return GetOwner()->As<GameLevel>()->GetLife();
+}
+
+void Player::SyncCollisionPosition()
+{
+	collisionPosition.x = position.x;
+	collisionPosition.y = position.y;
+}
+
+void Player::OnCollisionThunk(void* user, const CollisionEvent& e)
+{
+	auto* self = static_cast<Player*>(user);
+	if (!self)
+		return;
+
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	auto* other = static_cast<Actor*>(cs.GetListener(e.otherID));
+	if (cs.GetLayer(e.otherID) == CollisionLayer::Enemy)
+	{
+		other->Destroy();
+	}
 }
 
 void Player::ClearMove(float deltaTime)
@@ -305,5 +336,6 @@ void Player::ClearMove(float deltaTime)
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
+	SyncCollisionPosition();
 }
 

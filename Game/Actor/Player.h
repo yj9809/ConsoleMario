@@ -3,6 +3,7 @@
 #include "Actor/Actor.h"
 #include "Level/Level.h"
 #include "Util/Util.h"
+#include "Component/CollisionComponent.h"
 
 #include "Interface/ICanPlayerMove.h"
 
@@ -93,6 +94,11 @@ private:
 	void SetWeight(float& weight, float deltaTime);
 
 	inline int GetLife() const;
+
+	// test: Collision 위치 동기화.
+	void SyncCollisionPosition();
+
+	static void OnCollisionThunk(void* user, const CollisionEvent& e);
 	
 
 private:
@@ -133,6 +139,10 @@ private:
 
 	// 바닥 체크 플래그.
 	bool isGround = false;
+
+
+	// test: 충돌 컴포넌트.
+	CollisionComponent collisionComponent;
+
+	Position collisionPosition;
 };
-
-

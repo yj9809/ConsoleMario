@@ -2,6 +2,7 @@
 
 #include "Actor/Actor.h"
 
+
 using namespace Wanted;
 
 class Wall : public Actor

@@ -34,9 +34,11 @@ void GameLevel::Tick(float deltaTime)
 	if (!clearFlag)
 	{
 		super::Tick(deltaTime);
+
+		ScreenManager::Get().GetCollisionSystem().Step();
 		ProcessCollisionCoinAndPlayer();
 		ProcessCollisionGoalAndPlayer();
-		ProcessCollisionEnemyAndPlayer();
+		//ProcessCollisionEnemyAndPlayer();
 
 		cameraManager->Update(player->GetPosition().x);
 		Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());

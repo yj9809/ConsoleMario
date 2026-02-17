@@ -2,14 +2,18 @@
 #include "Util/Util.h"
 #include "Level/GameLevel.h"
 #include "Level/MenuLevel.h"
+#include "Actor/Actor.h"
 
 #include <iostream>
 
 ScreenManager* ScreenManager::instance = nullptr;
+CollisionSystem* ScreenManager::collisionSystem = nullptr;
 
 ScreenManager::ScreenManager()
 {
 	instance = this;
+
+	collisionSystem = new CollisionSystem();
 
 	levels.emplace_back(new MenuLevel());
 	levels.emplace_back(new GameLevel());

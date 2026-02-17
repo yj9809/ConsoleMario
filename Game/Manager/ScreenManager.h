@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Engine/Engine.h"
+#include "System/CollisionSystem.h"
 
 #include <vector>
 
 using namespace Wanted;
+
+namespace Wanted { class Actor; }
 
 class GameLevel;
 
@@ -33,10 +36,15 @@ public:
 
 	static ScreenManager& Get();
 
-	ScreenType currentScreenType = ScreenType::Game;
+	ScreenType currentScreenType = ScreenType::Start;
+
+	CollisionSystem& GetCollisionSystem() { return *collisionSystem; }
+
 private:
 	std::vector<Level*> levels;
 
 	static ScreenManager* instance;
+
+	static CollisionSystem* collisionSystem;
 };
 
