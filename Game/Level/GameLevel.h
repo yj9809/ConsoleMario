@@ -36,6 +36,9 @@ public:
 	void ProcessCollisionGoalAndPlayer();
 	void ProcessCollisionEnemyAndPlayer();
 
+	// 콜리전을 활용한 플레이어 적 상호작용 이벤트 처리 함수,
+	void OnPlayerHitEnemy(Enemy* enemy, bool stemped);
+
 	void CameraResetToSpawn();
 
 	int GetCameraXPosition();
@@ -46,43 +49,10 @@ public:
 
 	virtual bool IsNextToGround(const Wanted::Vector2& enemyNextPosition) override;
 
-	inline void Init()
-	{
-		if (actors.size())
-		{
-			for (Actor* const actor : actors)
-			{
-				actor->Destroy();
-			}
-			ProcessAddAndDestroyActors();
-		}
-
-		cameraManager->ResetToSpawn(Vector2::SpawnPoint.x);
-		player->ResetPosition();
-		clearFlag = false;
-		score = 0;
-		life = 3;
-		currentMap = Map::Map1;
-		LoadMap("1-1.txt");
-
-		if(cameraManager)
-		{
-			SafeDelete(cameraManager);
-		}
-
-		player = AddNewActorReturn(new Player())->As<Player>();
-
-		cameraManager = new CameraManager(120, worldWidth);
-	}
-	inline int GetLife() const { return life; }
-	inline void SetLife() { life--; }
-	inline Map GetCurrentMap() const { return currentMap; }
+	void Init();
 
 	// 플레이어 반환 함수
 	inline Player* GetPlayer() const { return player; }
-
-	// 맵 클리어 플래그
-	inline void SetClearFlag(bool flag) { clearFlag = flag; }
 
 private:
 	void LoadMap(const char* mapFile);
@@ -105,8 +75,5 @@ private:
 	// UI 문자열 버퍼.
 	char uiLife[20] = {};
 	char uiScore[20] = {};
-
-	// 맵 클리어 플래그.
-	bool clearFlag = false;
 };
 

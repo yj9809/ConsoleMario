@@ -14,9 +14,7 @@ MenuLevel::MenuLevel()
 		[]()
 		{
 			// 게임 레벨로 전환.
-			ScreenManager::Get().currentScreenType = ScreenType::Start;
-			ScreenManager::Get().ToggleMenu(1);
-			//ScreenManager::Get().GetGameLevel()->Init();
+			ScreenManager::Get().SetGameStartScreen();
 		}
 	));
 
@@ -25,7 +23,7 @@ MenuLevel::MenuLevel()
 		[]()
 		{
 			// 메뉴 토글 함수 호출.
-			ScreenManager::Get().ToggleMenu(1);
+			ScreenManager::Get().SetInGameScreen();
 		}
 	));
 
@@ -40,20 +38,19 @@ MenuLevel::MenuLevel()
 
 	items.emplace_back(new MenuItem(
 		"PRESS ENTER...",
-		[]()
+		[this]()
 		{
-			if (ScreenManager::Get().currentScreenType == ScreenType::MapClear)
+			if (menuType == MenuType::MapClear)
 			{
-				ScreenManager::Get().GetGameLevel()->SetClearFlag(true);
+				ScreenManager::Get().RequestGameClear();
 			}
-			else if (ScreenManager::Get().currentScreenType == ScreenType::GameClear)
+			else if (menuType == MenuType::GameClear)
 			{
 				ScreenManager::Get().QuitEngine();
 				return;
 			}
 
-			ScreenManager::Get().currentScreenType = ScreenType::Game;
-			ScreenManager::Get().ToggleMenu(1);
+			ScreenManager::Get().SetInGameScreen();
 		}
 	));
 
@@ -61,8 +58,7 @@ MenuLevel::MenuLevel()
 		"Title Screen",
 		[]()
 		{
-			ScreenManager::Get().currentScreenType = ScreenType::Title_Menu;
-			ScreenManager::Get().ToggleMenu((int)ScreenType::Title_Menu);
+			ScreenManager::Get().SetTitleScreen();
 		}
 	));
 }
@@ -105,7 +101,7 @@ void MenuLevel::Menu()
 	if (Input::Get().GetKeyDown(VK_ESCAPE))
 	{
 		// 메뉴 토글.
-		ScreenManager::Get().ToggleMenu((int)ScreenType::Game);
+		ScreenManager::Get().SetInGameScreen();
 
 		// 인덱스 초기화.
 		currentIndex = 0;
@@ -118,26 +114,25 @@ void MenuLevel::Tick(float deltaTime)
 
 	displayItems.clear();
 
-	if (ScreenManager::Get().currentScreenType == ScreenType::Title_Menu)
+	if (menuType == MenuType::Title)
 	{
 		displayItems.emplace_back(items[0]);
 		displayItems.emplace_back(items[2]);
 	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::Game)
+	else if (menuType == MenuType::InGame)
 	{
 		displayItems.emplace_back(items[1]);
 		displayItems.emplace_back(items[2]);
 	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::Respawn)
+	else if (menuType == MenuType::Respawn)
 	{
 		displayItems.emplace_back(items[3]);
 	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::MapClear ||
-		ScreenManager::Get().currentScreenType == ScreenType::GameClear)
+	else if (menuType == MenuType::MapClear || menuType == MenuType::GameClear)
 	{
 		displayItems.emplace_back(items[3]);
 	}
-	else if(ScreenManager::Get().currentScreenType == ScreenType::GameOver)
+	else if(menuType == MenuType::GameOver)
 	{
 		displayItems.emplace_back(items[4]);
 		displayItems.emplace_back(items[2]);
@@ -152,8 +147,9 @@ void MenuLevel::Tick(float deltaTime)
 
 void MenuLevel::Draw()
 {
-	if (ScreenManager::Get().currentScreenType == ScreenType::Title_Menu)
+	switch (menuType)
 	{
+	case MenuType::Title:
 		Renderer::Get().Submit(
 			"   ******                                      **           ****     ****                  **         \n"
 			"  **    **                                     **           ** **   ** **                             \n"
@@ -164,18 +160,17 @@ void MenuLevel::Draw()
 			"   ******   ******  ***   ** ******   ******  ***  ******   **         **  ******** ***    **  ****** \n"
 			, Vector2(X_POSITION(100), 10), Color::WhiteBright, true);
 		Renderer::Get().Submit(
-				"\n"
-				"    ////                                      /            /  /       /                   //          \n"
-				"       //                                     /            /  //      /                               \n"
-				"/            ////  //  ///     ////    ////   /     ///    /   //     /   //////   //  // /     ////  \n"
-				"/         /     /   /    /  //      /     /   /  /         /    //    /             /   / /  /     /  \n"
-				"//        /     /   /    /   /////  /     /   /  /  ////   /     /    /     ////    /     /  /     /  \n"
-				" //       //             /          //           //        /          /  //        /      /  //       \n"
-				"  //////   //////  ///   // //////   //////  ///  //////   //         //  //////// ///    //  //////  \n"
-				, Vector2(X_POSITION(100), 10), Color::Gray, true);
-	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::Game)
-	{
+			"\n"
+			"    ////                                      /            /  /       /                   //          \n"
+			"       //                                     /            /  //      /                               \n"
+			"/            ////  //  ///     ////    ////   /     ///    /   //     /   //////   //  // /     ////  \n"
+			"/         /     /   /    /  //      /     /   /  /         /    //    /             /   / /  /     /  \n"
+			"//        /     /   /    /   /////  /     /   /  /  ////   /     /    /     ////    /     /  /     /  \n"
+			" //       //             /          //           //        /          /  //        /      /  //       \n"
+			"  //////   //////  ///   // //////   //////  ///  //////   //         //  //////// ///    //  //////  \n"
+			, Vector2(X_POSITION(100), 10), Color::Gray, true);
+		break;
+	case MenuType::InGame:
 		Renderer::Get().Submit(
 			" ****     **** ******** ****     ** **     **\n"
 			" ** **   ** ** **       ** **    ** **     **\n"
@@ -196,9 +191,8 @@ void MenuLevel::Draw()
 			"/          /  /        /      //   //        \n"
 			"//         // //////// //      ///  ///////  \n",
 			Vector2(X_POSITION(42), 5), Color::Gray, true);
-	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::Respawn)
-	{
+		break;
+	case MenuType::Respawn:
 		Renderer::Get().Submit(
 			" *******   ********  ******** *******    **     **       ** ****     **\n"
 			" **    **  **       **        **    **  ****    **       ** ** **    **\n"
@@ -223,33 +217,9 @@ void MenuLevel::Draw()
 			"LIFE - 1...",
 			Vector2(X_POSITION(12), 15),
 			Color::WhiteBright);
-
-	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::GameOver)
-	{
-		Renderer::Get().Submit(
-			"   ********      **     ****     **** ********     *******   **      ** ******** *******           \n"
-			"  **      **    ****    ** **   ** ** **          **     **  **      ** **       **    **          \n"
-			" **            **  **   **  ** **  ** **         **       ** **      ** **       **    **          \n"
-			" **           **    **  **   ***   ** *******    **       **  **    **  *******  *******           \n"
-			" **    ***** ********** **    *    ** **         **       **   **  **   **       **   **           \n"
-			"  **      ** **      ** **         ** **          **     **     ****    **       **    **  ** ** **\n"
-			"   ********  **      ** **         ** ********     *******       **     ******** **     ** ** ** **\n",
-			Vector2(X_POSITION(100), 10), Color::WhiteBright, true);
-		Renderer::Get().Submit(
-			"\n"
-			"    //////             /  /       /  /  /////       /////   /       /  /  ///// /  ////            \n"
-			"         //      //    /  //      /  /                  //  /       /  /        /     /            \n"
-			"/                 //   /   //     /  /          /        /  //         /        /                  \n"
-			"/                      /    //    /  /  ////    /        /   //        /  ////  /  ///             \n"
-			"//    ////  /  //////  /     /    /  /          //            //       /        /    //            \n"
-			" //         /       /  /          /  /           //            //      /        /     //  /  /  /  \n"
-			"  ////////  //      // //         // ////////     ///////       //     //////// //     // // // // \n",
-			Vector2(X_POSITION(100), 10), Color::Gray, true);
-	}
-	else if (ScreenManager::Get().currentScreenType == ScreenType::MapClear || 
-		ScreenManager::Get().currentScreenType == ScreenType::GameClear)
-	{
+		break;
+	case MenuType::MapClear:
+	case MenuType::GameClear:
 		Renderer::Get().Submit(
 			"   ******  **       ********     **     *******  \n"
 			"  **    ** **       **          ****    **    ** \n"
@@ -271,21 +241,44 @@ void MenuLevel::Draw()
 			" //       /        /        /       /  /     //  \n"
 			"  //////  //////// //////// //      // //     // \n",
 			Vector2(X_POSITION(48), 5), Color::Gray, true);
-		if (ScreenManager::Get().currentScreenType == ScreenType::MapClear)
+		if (menuType == MenuType::MapClear)
 		{
 			Renderer::Get().Submit(
 				"Next Level",
 				Vector2(X_POSITION(10), 15),
 				Color::WhiteBright);
 		}
-		else 
+		else
 		{
 			Renderer::Get().Submit(
 				"Press Enter to quit the game.",
 				Vector2(X_POSITION(30), 15),
 				Color::WhiteBright);
 		}
-		
+		break;
+	case MenuType::GameOver:
+		Renderer::Get().Submit(
+			"   ********      **     ****     **** ********     *******   **      ** ******** *******           \n"
+			"  **      **    ****    ** **   ** ** **          **     **  **      ** **       **    **          \n"
+			" **            **  **   **  ** **  ** **         **       ** **      ** **       **    **          \n"
+			" **           **    **  **   ***   ** *******    **       **  **    **  *******  *******           \n"
+			" **    ***** ********** **    *    ** **         **       **   **  **   **       **   **           \n"
+			"  **      ** **      ** **         ** **          **     **     ****    **       **    **  ** ** **\n"
+			"   ********  **      ** **         ** ********     *******       **     ******** **     ** ** ** **\n",
+			Vector2(X_POSITION(100), 10), Color::WhiteBright, true);
+		Renderer::Get().Submit(
+			"\n"
+			"    //////             /  /       /  /  /////       /////   /       /  /  ///// /  ////            \n"
+			"         //      //    /  //      /  /                  //  /       /  /        /     /            \n"
+			"/                 //   /   //     /  /          /        /  //         /        /                  \n"
+			"/                      /    //    /  /  ////    /        /   //        /  ////  /  ///             \n"
+			"//    ////  /  //////  /     /    /  /          //            //       /        /    //            \n"
+			" //         /       /  /          /  /           //            //      /        /     //  /  /  /  \n"
+			"  ////////  //      // //         // ////////     ///////       //     //////// //     // // // // \n",
+			Vector2(X_POSITION(100), 10), Color::Gray, true);
+		break;
+	default:
+		break;
 	}
 
 	int maxLen = 0;
@@ -310,3 +303,5 @@ void MenuLevel::Draw()
 		);
 	}
 }
+
+

@@ -19,12 +19,16 @@ Enemy::Enemy(const Vector2& position)
 	cs.SetListener(component.GetColliderID(), this, nullptr);
 }
 
-Enemy::~Enemy()
+void Enemy::SetIsDestroyed()
 {
+	isDestroyed = true; 
 	auto& cs = ScreenManager::Get().GetCollisionSystem();
 	cs.ClearListener(component.GetColliderID());
 	component.OnDisable(cs);
+}
 
+Enemy::~Enemy()
+{
 	super::OnDestroy();
 }
 
@@ -36,7 +40,7 @@ void Enemy::BeginPlay()
 	{
 		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
 	}
-	yPosition = position.y;
+	yPosition = (float)position.y;
 }
 
 void Enemy::Tick(float deltaTime)

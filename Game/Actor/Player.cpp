@@ -2,11 +2,12 @@
 #include "Manager/ScreenManager.h"
 #include "Core/Input.h"
 #include "Level/GameLevel.h"
+#include "Actor/Enemy.h"
 
 #define RIGHT_KEY (Input::Get().GetKey(VK_RIGHT))
 #define LEFT_KEY (Input::Get().GetKey(VK_LEFT))
 #define SPACE_DOWN (Input::Get().GetKeyDown(VK_SPACE))
-#define ESC_DOWN (Input::Get().GetKeyDown(VK_ESCAPE))
+
 
 #define HEAD_RIGHT Vector2((int)(xPosition + width - 1), (int)(yPosition))
 #define HEAD_LEFT Vector2((int)(xPosition), (int)(yPosition))
@@ -50,11 +51,7 @@ void Player::Tick(float deltaTime)
 		return;
 	}
 
-	if (ESC_DOWN)
-	{
-		ScreenManager::Get().ToggleMenu((int)ScreenType::Title_Menu);
-		return;
-	}
+	
 
 	Move(deltaTime);
 
@@ -104,7 +101,7 @@ void Player::MoveRight(float deltaTime)
 	Vector2 nextDownPosition = POOT_RIGHT;
 	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
-		xPosition = position.x;
+		xPosition = (float)position.x;
 	}
 
 	if (xPosition + width > ScreenManager::Get().GetWidth())
@@ -129,7 +126,7 @@ void Player::MoveLeft(float deltaTime)
 	Vector2 nextDownPosition = POOT_LEFT;
 	if (!canPlayerMove->CanMove(nextUpPosition) || !canPlayerMove->CanMove(nextDownPosition))
 	{
-		xPosition = position.x;
+		xPosition = (float)position.x;
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
@@ -226,7 +223,7 @@ void Player::Fall()
 	// 플레이어 포지션이 화면 아래로 벗어났는지 체크.
 	if (position.y > ScreenManager::Get().GetHeight())
 	{
-		RespawnAt(Vector2::SpawnPoint);
+		currentState = State::Death;
 	}
 }
 
@@ -238,36 +235,19 @@ void Player::DeathMotion(float deltaTime)
 
 	if (position.y > ScreenManager::Get().GetHeight())
 	{
-		RespawnAt(Vector2::SpawnPoint);
+		currentState = State::Death;
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 	SyncCollisionPosition();
 }
 
-// 낙사, 몬스터 충돌 등으로 플레이어가 리스폰할 때 호출되는 함수.
-inline void Player::RespawnAt(const Vector2& pos)
+void Player::ResetPosition()
 {
-	if (GetLife() > 0)
-	{
-		ScreenManager::Get().currentScreenType = ScreenType::Respawn;
-		ScreenManager::Get().ToggleMenu(0);
-		xPosition = pos.x;
-		yPosition = pos.y;
-		SetPosition(Vector2::SpawnPoint);
-
-		// 라이프 감소 및 초기 위치로 리스폰.
-		GetOwner()->As<GameLevel>()->SetLife();
-		GetOwner()->As<GameLevel>()->Spawn();
-		GetOwner()->As<GameLevel>()->CameraResetToSpawn();
-
-		currentState = State::Idle;
-	}
-	else
-	{
-		ScreenManager::Get().currentScreenType = ScreenType::GameOver;
-		ScreenManager::Get().ToggleMenu(0);
-	}
+	currentState = State::Idle;
+	SetPosition(Vector2::SpawnPoint);
+	xPosition = (float)position.x;
+	yPosition = (float)position.y;
 }
 
 void Player::AddPlatformMove(const Vector2& delta)
@@ -286,11 +266,6 @@ inline void Player::SetWeight(float& weight, float deltaTime)
 	Util::Clamp(weight, 0.0f, 15.0f);
 }
 
-inline int Player::GetLife() const
-{
-	return GetOwner()->As<GameLevel>()->GetLife();
-}
-
 void Player::SyncCollisionPosition()
 {
 	collisionPosition.x = position.x;
@@ -307,7 +282,9 @@ void Player::OnCollisionThunk(void* user, const CollisionEvent& e)
 	auto* other = static_cast<Actor*>(cs.GetListener(e.otherID));
 	if (cs.GetLayer(e.otherID) == CollisionLayer::Enemy)
 	{
-		other->Destroy();
+		bool isFalling = self->currentState == State::Falling;
+		auto* enemy = other->As<Enemy>();
+		self->GetOwner()->As<GameLevel>()->OnPlayerHitEnemy(enemy, isFalling);
 	}
 }
 
@@ -321,21 +298,31 @@ void Player::ClearMove(float deltaTime)
 	{
 		xPosition += moveSpeed * deltaTime;
 	}
-	else
+	else if(xPosition >= ScreenManager::Get().GetWidth())
 	{
-		if(GetOwner()->As<GameLevel>()->GetCurrentMap() == GameLevel::Map::Map3)
-		{
-			ScreenManager::Get().currentScreenType = ScreenType::GameClear;
-		}
-		else
-		{
-			ScreenManager::Get().currentScreenType = ScreenType::MapClear;
-		}
-		
-		ScreenManager::Get().ToggleMenu(0);
+		currentState = State::Clear;
 	}
 
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 	SyncCollisionPosition();
+}
+
+void Player::SetDeath(State state, bool left)
+{
+	currentState = state;
+
+	// 기본값 설정.
+	deathVelocityX = 20.0f;
+	deathVelocityY = -15.0f;
+	deathGravity = 50.0f;
+
+	// 방향 전환.
+	// 플레이어가 적 왼쪽에서 충돌했으면 왼쪽으로 날아가고,
+	// 오른쪽에서 충돌했으면 오른쪽으로 날아가도록 설정.
+	SetDeathVelocityX(left);
+
+	// 현재 좌표 동기화.
+	xPosition = position.x;
+	yPosition = position.y;
 }
 

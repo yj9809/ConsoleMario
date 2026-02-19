@@ -5,13 +5,14 @@
 #include "Util/Util.h"
 
 #include <vector>
+#include <functional>
 
 using namespace Wanted;
 
 struct MenuItem
 {
 	// 메뉴 선택됐을 때 실행될 함수의 타입.
-	using OnSelected = void (*)();
+	using OnSelected = std::function<void()>;
 
 	MenuItem(const char* text, OnSelected onSelected)
 		: onSelected(onSelected)
@@ -39,6 +40,16 @@ class MenuLevel : public Level
 	RTTI_DECLARATIONS(MenuLevel, Level)
 
 public:
+	enum class MenuType
+	{
+		Title,
+		InGame,
+		Respawn,
+		MapClear,
+		GameClear,
+		GameOver
+	};
+
 	MenuLevel();
 	~MenuLevel();
 
@@ -48,9 +59,14 @@ public:
 	virtual void Tick(float deltaTime) override;
 	virtual void Draw() override;
 
+	inline void SetMenuType(MenuType menuType) { this->menuType = menuType; }
+
 private:
 	// 현재 활성화된 메뉴 아이템 인덱스.
 	int currentIndex = 0;
+
+	// 메뉴 타입 저장 변수.
+	MenuType menuType = MenuType::Title;
 
 	// 선택된 아이템의 색상.
 	Color selectedColor = Color::Green;

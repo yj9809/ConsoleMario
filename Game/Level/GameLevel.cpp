@@ -10,12 +10,12 @@
 #include "Actor/Coin.h"
 #include "Actor/Enemy.h"
 #include "Actor/MovePlatform.h"
-#include "Manager/ScreenManager.h"
+#include "Core/Input.h"
+
+#define ESC_DOWN (Input::Get().GetKeyDown(VK_ESCAPE))
 
 GameLevel::GameLevel()
 {
-	player = AddNewActorReturn(new Player())->As<Player>();
-
 	cameraManager = new CameraManager(120, worldWidth);
 }
 
@@ -26,27 +26,26 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
-	if (ScreenManager::Get().currentScreenType == ScreenType::Start)
+	if (ESC_DOWN)
 	{
-		Init();
-		ScreenManager::Get().currentScreenType = ScreenType::Game;
+		ScreenManager::Get().SetInGameMenuScreen();
+		return;
 	}
 
-	if (!clearFlag)
+	if (!ScreenManager::Get().ConsumeGameClearRequest())
 	{
 		super::Tick(deltaTime);
 
 		ScreenManager::Get().GetCollisionSystem().Step();
 		ProcessCollisionCoinAndPlayer();
 		ProcessCollisionGoalAndPlayer();
-		//ProcessCollisionEnemyAndPlayer();
+		ProcessCollisionEnemyAndPlayer();
 
 		cameraManager->Update(player->GetPosition().x);
 		Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());
 	}
 	else
 	{
-		clearFlag = false;
 		if(actors.size() > 0)
 		{
 			for (Actor* const actor : actors)
@@ -75,8 +74,7 @@ void GameLevel::Tick(float deltaTime)
 		else if (currentMap == Map::Map3)
 		{
 			// Todo: 게임 클리어 처리.
-			ScreenManager::Get().currentScreenType = ScreenType::GameClear;
-			ScreenManager::Get().ToggleMenu(0);
+			ScreenManager::Get().SetGameClearScreen();
 		}
 
 		if (cameraManager)
@@ -87,6 +85,38 @@ void GameLevel::Tick(float deltaTime)
 		player = AddNewActorReturn(new Player())->As<Player>();
 
 		cameraManager = new CameraManager(120, worldWidth);
+	}
+
+	if(player->GetState() == Player::State::Death && player->GetPosition().y > ScreenManager::Get().GetHeight())
+	{
+		if (life > 0)
+		{
+			life--;
+			player->ResetPosition();
+			ScreenManager::Get().SetRespawnScreen();
+		}
+		else 
+		{
+			ScreenManager::Get().SetGameOverScreen();
+		}
+		CameraResetToSpawn();
+	}
+	if(player->GetState() == Player::State::Clear && player->GetPosition().x >= ScreenManager::Get().GetWidth())
+	{
+		switch (currentMap)
+		{
+		case GameLevel::Map::Map1:
+			ScreenManager::Get().SetMapClearScreen();
+			break;
+		case GameLevel::Map::Map2:
+			ScreenManager::Get().SetMapClearScreen();
+			break;
+		case GameLevel::Map::Map3:
+			ScreenManager::Get().SetGameClearScreen();
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -165,7 +195,7 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 			{
 				int y = player->GetPosition().y;
 				score += 130 - y;
-				player->As<Player>()->SetClear();
+				player->SetClear();
 				continue;
 			}
 		}
@@ -197,20 +227,27 @@ void GameLevel::ProcessCollisionEnemyAndPlayer()
 		{
 			if (!enemy->As<Enemy>()->GetIsDestroyed())
 			{
-				if (player->GetState() == Player::State::Falling)
-				{
-					enemySpawn->RemoveEnemy(enemy);
-					enemy->As<Enemy>()->SetIsDestroyed();
-					score += 50;
-					continue;
-				}
-				else
-				{
-					player->SetDeath(Player::State::Death, player->GetPosition().x < enemy->GetPosition().x);
-					CameraResetToSpawn();
-				}
+				
 			}
 		}
+	}
+}
+
+void GameLevel::OnPlayerHitEnemy(Enemy* enemy, bool stemped)
+{
+	if (!enemy || enemy->GetIsDestroyed())
+		return;
+	if (stemped)
+	{
+		if(enemySpawn)
+			enemySpawn->RemoveEnemy(enemy);
+		enemy->SetIsDestroyed();
+		score += 50;
+	}
+	else
+	{
+		player->SetDeath(Player::State::Death, player->GetPosition().x < enemy->GetPosition().x);
+		CameraResetToSpawn();
 	}
 }
 
@@ -291,6 +328,34 @@ bool GameLevel::IsNextToGround(const Wanted::Vector2& enemyNextPosition)
 	}
 
 	return false;
+}
+
+void GameLevel::Init()
+{
+	if (actors.size())
+	{
+		for (Actor* const actor : actors)
+		{
+			actor->Destroy();
+		}
+		ProcessAddAndDestroyActors();
+	}
+
+	player = AddNewActorReturn(new Player())->As<Player>();
+
+	cameraManager->ResetToSpawn(Vector2::SpawnPoint.x);
+	player->ResetPosition();
+	score = 0;
+	life = 3;
+	currentMap = Map::Map1;
+	LoadMap("1-1.txt");
+
+	if (cameraManager)
+	{
+		SafeDelete(cameraManager);
+	}
+
+	cameraManager = new CameraManager(120, worldWidth);
 }
 
 void GameLevel::LoadMap(const char* mapFile)

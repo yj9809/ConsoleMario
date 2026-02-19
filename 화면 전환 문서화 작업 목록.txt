@@ -1,0 +1,45 @@
+﻿화면 전환 관련 수정 사항 정리 (2026-02-19 기준)
+
+핵심 원칙
+- 화면 전환은 ScreenManager의 SetXXXScreen()만 사용
+- Player는 상태만 변경하고 화면 전환을 직접 호출하지 않음
+- GameLevel / MenuLevel만 ScreenManager 전환 함수 호출
+
+구조 변경 요약
+1) ScreenManager 전환 책임 통합
+- SetTitleScreen / SetGameStartScreen / SetInGameScreen / SetInGameMenuScreen / SetRespawnScreen / SetMapClearScreen / SetGameClearScreen / SetGameOverScreen으로 전환 함수 분리
+- ToggleMenu() 직접 호출은 ScreenManager 내부에서만 사용
+- ScreenType / currentScreenType 직접 사용 제거됨
+
+2) GameType 제거
+- 시작/복귀 동작을 전환 함수로 분리해 GameType 불필요
+- SetGameStartScreen(): 새 게임 시작(Init 포함)
+- SetInGameScreen(): 메뉴 복귀(Init 없이 게임 화면 복귀)
+
+3) GameClear 요청 플래그 도입
+- MenuLevel에서 RequestGameClear()로 다음 맵 진행 요청
+- GameLevel에서 ConsumeGameClearRequest()로 요청 소비 후 맵 로드
+- 맵 전환은 ConsumeGameClearRequest() 블록에서만 수행
+
+4) Player 전환 호출 제거
+- Player에서 ScreenManager 호출 제거
+- 사망/클리어는 State 변경만 수행
+- 화면 전환은 GameLevel 감시 로직에서 처리
+
+5) GameLevel 전환 감시 정리
+- State::Death 감지 시:
+  - life > 0: SetRespawnScreen()
+  - life == 0: SetGameOverScreen()
+- State::Clear 감지 시:
+  - Map1/Map2: SetMapClearScreen()
+  - Map3: SetGameClearScreen()
+
+6) MenuLevel 전환 정리
+- Resume Game / ESC: SetInGameScreen()으로 복귀
+- MapClear ENTER: RequestGameClear() 후 SetInGameScreen()
+- 모든 전환은 ScreenManager SetXXXScreen()만 사용
+
+확인 포인트 (유지보수용)
+- Player는 상태만 변경하고 전환 호출하지 않는지 확인
+- GameLevel에서 맵 전환이 중복되지 않도록 currentMap 변경은 ConsumeGameClearRequest()에서만 처리
+- MenuLevel의 선택/ESC는 Start와 Resume가 혼동되지 않도록 분리 유지

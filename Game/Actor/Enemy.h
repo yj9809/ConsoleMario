@@ -14,7 +14,7 @@ class Enemy : public Actor
 public:
 	Enemy(const Vector2& postion);
 
-	inline void SetIsDestroyed() { isDestroyed = true; }
+	void SetIsDestroyed();
 	inline bool GetIsDestroyed() const { return isDestroyed; }
 
 	~Enemy();

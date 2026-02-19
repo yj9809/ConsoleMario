@@ -7,7 +7,6 @@
 #include <iostream>
 
 ScreenManager* ScreenManager::instance = nullptr;
-CollisionSystem* ScreenManager::collisionSystem = nullptr;
 
 ScreenManager::ScreenManager()
 {
@@ -15,12 +14,13 @@ ScreenManager::ScreenManager()
 
 	collisionSystem = new CollisionSystem();
 
-	levels.emplace_back(new MenuLevel());
-	levels.emplace_back(new GameLevel());
+	menuLevel = new MenuLevel();
+	gameLevel = new GameLevel();
 
-	currentScreenType = ScreenType::Title_Menu;
+	levels.emplace_back(menuLevel);
+	levels.emplace_back(gameLevel);
 
-	mainLevel = levels[0];
+	SetTitleScreen();
 }
 
 ScreenManager::~ScreenManager()
@@ -32,23 +32,9 @@ ScreenManager::~ScreenManager()
 		SafeDelete(level);
 	}
 
+	SafeDelete(collisionSystem);
+
 	levels.clear();
-}
-
-void ScreenManager::ToggleMenu(int num)
-{
-	// 메인 레벨 변경.
-	mainLevel = levels[num];
-}
-
-int ScreenManager::GetLife()
-{
-	return levels[0]->As<GameLevel>()->GetLife();
-}
-
-GameLevel* ScreenManager::GetGameLevel() const
-{
-	return levels[1]->As<GameLevel>();
 }
 
 ScreenManager& ScreenManager::Get()
@@ -63,3 +49,67 @@ ScreenManager& ScreenManager::Get()
 	// 정적 변수 반환.
 	return *instance;
 }
+
+bool ScreenManager::ConsumeGameClearRequest()
+{
+	if (requestGameClear)
+	{
+		requestGameClear = false;
+		return true;
+	}
+	return false;
+}
+
+void ScreenManager::SetTitleScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::Title);
+	ToggleMenu(0);
+}
+
+void ScreenManager::SetGameStartScreen()
+{
+	gameLevel->Init();
+	ToggleMenu(1);
+}
+
+void ScreenManager::SetInGameScreen()
+{
+	ToggleMenu(1);
+}
+
+void ScreenManager::SetInGameMenuScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::InGame);
+	ToggleMenu(0);
+}
+
+void ScreenManager::SetRespawnScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::Respawn);
+	ToggleMenu(0);
+}
+
+void ScreenManager::SetMapClearScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::MapClear);
+	ToggleMenu(0);
+}
+
+void ScreenManager::SetGameClearScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::GameClear);
+	ToggleMenu(0);
+}
+
+void ScreenManager::SetGameOverScreen()
+{
+	menuLevel->SetMenuType(MenuLevel::MenuType::GameOver);
+	ToggleMenu(0);
+}
+
+void ScreenManager::ToggleMenu(int num)
+{
+	// 메인 레벨 변경.
+	mainLevel = levels[num];
+}
+
