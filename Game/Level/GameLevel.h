@@ -3,8 +3,9 @@
 #include "Level/Level.h"
 #include "Interface/ICanPlayerMove.h"
 #include "Actor/Spawner.h"
-#include	"Actor/Player.h"
-#include  "Manager/CameraManager.h"
+#include "Actor/Player.h"
+#include "Actor/Coin.h"
+#include "Manager/CameraManager.h"
 
 #include <vector>
 
@@ -34,10 +35,10 @@ public:
 
 	void ProcessCollisionCoinAndPlayer();
 	void ProcessCollisionGoalAndPlayer();
-	void ProcessCollisionEnemyAndPlayer();
 
 	// 콜리전을 활용한 플레이어 적 상호작용 이벤트 처리 함수,
 	void OnPlayerHitEnemy(Enemy* enemy, bool stemped);
+	void OnPlayerHitCoin(Coin* coin);
 
 	void CameraResetToSpawn();
 

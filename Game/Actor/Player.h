@@ -28,6 +28,7 @@ public:
 
 public:
 	Player();
+	~Player();
 
 	inline void SetClear() { currentState = State::Clear; }
 
@@ -74,6 +75,7 @@ private:
 
 	static void OnCollisionThunk(void* user, const CollisionEvent& e);
 	
+	static void GetPosThunk(void* user, float& outX, float& outY);
 
 private:
 	ICanPlayerMove* canPlayerMove = nullptr;

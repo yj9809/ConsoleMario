@@ -37,16 +37,14 @@ void GameLevel::Tick(float deltaTime)
 		super::Tick(deltaTime);
 
 		ScreenManager::Get().GetCollisionSystem().Step();
-		ProcessCollisionCoinAndPlayer();
 		ProcessCollisionGoalAndPlayer();
-		ProcessCollisionEnemyAndPlayer();
 
 		cameraManager->Update(player->GetPosition().x);
 		Renderer::Get().SetCameraPosition(cameraManager->GetCameraXPosition(), cameraManager->GetCameraWidth());
 	}
 	else
 	{
-		if(actors.size() > 0)
+		if (actors.size() > 0)
 		{
 			for (Actor* const actor : actors)
 			{
@@ -87,7 +85,7 @@ void GameLevel::Tick(float deltaTime)
 		cameraManager = new CameraManager(120, worldWidth);
 	}
 
-	if(player->GetState() == Player::State::Death && player->GetPosition().y > ScreenManager::Get().GetHeight())
+	if (player->GetState() == Player::State::Death && player->GetPosition().y > ScreenManager::Get().GetHeight())
 	{
 		if (life > 0)
 		{
@@ -95,13 +93,13 @@ void GameLevel::Tick(float deltaTime)
 			player->ResetPosition();
 			ScreenManager::Get().SetRespawnScreen();
 		}
-		else 
+		else
 		{
 			ScreenManager::Get().SetGameOverScreen();
 		}
 		CameraResetToSpawn();
 	}
-	if(player->GetState() == Player::State::Clear && player->GetPosition().x >= ScreenManager::Get().GetWidth())
+	if (player->GetState() == Player::State::Clear && player->GetPosition().x >= ScreenManager::Get().GetWidth())
 	{
 		switch (currentMap)
 		{
@@ -200,37 +198,7 @@ void GameLevel::ProcessCollisionGoalAndPlayer()
 			}
 		}
 	}
-	
-}
 
-void GameLevel::ProcessCollisionEnemyAndPlayer()
-{
-	std::vector<Actor*> enemies;
-
-	for (Actor* const actor : actors)
-	{
-		if(actor->IsTypeOf<Enemy>())
-		{
-			enemies.push_back(actor);
-			continue;
-		}
-	}
-
-	if (!player || enemies.size() == 0)
-	{
-		return;
-	}
-
-	for (Actor* const enemy : enemies)
-	{
-		if (player->TestIntersect(enemy))
-		{
-			if (!enemy->As<Enemy>()->GetIsDestroyed())
-			{
-				
-			}
-		}
-	}
 }
 
 void GameLevel::OnPlayerHitEnemy(Enemy* enemy, bool stemped)
@@ -239,7 +207,7 @@ void GameLevel::OnPlayerHitEnemy(Enemy* enemy, bool stemped)
 		return;
 	if (stemped)
 	{
-		if(enemySpawn)
+		if (enemySpawn)
 			enemySpawn->RemoveEnemy(enemy);
 		enemy->SetIsDestroyed();
 		score += 50;
@@ -249,6 +217,15 @@ void GameLevel::OnPlayerHitEnemy(Enemy* enemy, bool stemped)
 		player->SetDeath(Player::State::Death, player->GetPosition().x < enemy->GetPosition().x);
 		CameraResetToSpawn();
 	}
+}
+
+void GameLevel::OnPlayerHitCoin(Coin* coin)
+{
+	if (!coin || coin->GetIsDestroyed())
+		return;
+	coin->SetIsDestroyed();
+	coin->Destroy();
+	score += 10;
 }
 
 void GameLevel::CameraResetToSpawn()
@@ -403,7 +380,7 @@ void GameLevel::LoadMap(const char* mapFile)
 
 		char mapCharacter = buffer[index];
 		++index;
-		
+
 		if (mapCharacter == '\n')
 		{
 			maxWidth = max(maxWidth, position.x);

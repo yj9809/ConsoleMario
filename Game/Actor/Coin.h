@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Actor/Actor.h"
+#include "Component/CollisionComponent.h"
 
 using namespace Wanted;
 
@@ -10,8 +11,18 @@ class Coin : public Actor
 
 public: 
 	Coin(const Vector2& position);
+	
+	void SetIsDestroyed();
+	inline bool GetIsDestroyed() const { return isDestroyed; }
+
+private:
+	static void GetPosThunk(void* user, float& outX, float& outY);
 
 private: 
+	bool isDestroyed = false;
 
+	CollisionComponent collisionComponent;
+
+	Position collisionPosition;
 };
 

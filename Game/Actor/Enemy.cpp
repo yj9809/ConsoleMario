@@ -11,12 +11,7 @@ Enemy::Enemy(const Vector2& position)
 	: super("EEE\nEEE\nE E", position, Color::Blue), xPosition(static_cast<float>(position.x))
 {
 	sortingOrder = 7;
-	auto& cs = ScreenManager::Get().GetCollisionSystem();
-	component = CollisionComponent(false, CollisionLayer::Enemy, GetLayerMask(CollisionLayer::Player) | GetLayerMask(CollisionLayer::Platform), width, height);
-	collisionPosition.x = position.x;
-	collisionPosition.y = position.y;
-	component.OnEnable(cs, &collisionPosition);
-	cs.SetListener(component.GetColliderID(), this, nullptr);
+	
 }
 
 void Enemy::SetIsDestroyed()
@@ -41,6 +36,18 @@ void Enemy::BeginPlay()
 		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
 	}
 	yPosition = (float)position.y;
+
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	auto mask = component.MakeMask({ CollisionLayer::Player, CollisionLayer::Platform });
+	component = CollisionComponent(
+		false,
+		CollisionLayer::Enemy,
+		mask,
+		this,
+		&Enemy::GetPosThunk,
+		width, height);
+	component.OnEnable(cs, &collisionPosition);
+	cs.SetListener(component.GetColliderID(), this, nullptr);
 }
 
 void Enemy::Tick(float deltaTime)
@@ -111,4 +118,13 @@ bool Enemy::GroundCheck(int x, int y)
 		return true;
 	}
 	return false;
+}
+
+void Enemy::GetPosThunk(void* user, float& outX, float& outY)
+{
+	auto* self = static_cast<Enemy*>(user);
+	if (!self)
+		return;
+	outX = self->xPosition;
+	outY = self->yPosition;
 }

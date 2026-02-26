@@ -1,4 +1,5 @@
 #include "CollisionSystem.h"
+#include "Component/CollisionComponent.h"
 
 CollisionID CollisionSystem::Register(CollisionComponent& component, const Position* position)
 {

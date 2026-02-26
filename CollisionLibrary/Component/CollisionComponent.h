@@ -2,21 +2,35 @@
 
 #include "Util/CollisionTypes.h"
 
+
 #include <cstdint>
+#include <initializer_list>
 
 class CollisionSystem;
 
 class CollisionComponent
 {
 public:
-	CollisionComponent() = default;
-	CollisionComponent(const bool isTrigger, const CollisionLayer layer, const LayerMask mask, std::uint32_t width, std::uint32_t height)
-		: isTrigger(isTrigger), collisionLayer(layer), mask(mask), box{ width, height }
-	{
+	using PositionProvider = void(*)(void* user, float& outX, float& outY);
 
-	}
+public:
+	CollisionComponent() = default;
+	CollisionComponent(
+		const bool isTrigger, 
+		const CollisionLayer layer,
+		const LayerMask mask, 
+		void* positionUser, 
+		PositionProvider positionProvider,
+		std::uint32_t width, 
+		std::uint32_t height);
 
 	void OnEnable(CollisionSystem& system, const Position* position);
+
+	void SetPositionProvider(void* user, PositionProvider provider)
+	{
+		posUser = user;
+		posProvider = provider;
+	}
 
 	void OnDisable(CollisionSystem& system);
 
@@ -40,6 +54,16 @@ public:
 	}
 	const CollisionBox& GetBox() const { return box; }
 
+	inline LayerMask MakeMask(std::initializer_list<CollisionLayer> layers)
+	{
+		LayerMask mask = 0;
+		for (auto l : layers)
+		{
+			mask |= GetLayerMask(l);
+		}
+		return mask;
+	}
+
 private:
 	// Collision을 구분하기 위한 ID (0이면 미할당)
 	CollisionID collisionID = 0;
@@ -55,5 +79,8 @@ private:
 
 	// 충돌 판정을 위한 박스 정보.
 	CollisionBox box{};
+
+	void* posUser = nullptr;
+	PositionProvider posProvider = nullptr;
 };
 

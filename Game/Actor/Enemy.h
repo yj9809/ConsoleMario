@@ -29,6 +29,8 @@ private:
 	bool WallCheck(int x, int y);
 
 	bool GroundCheck(int x, int y);
+
+	static void GetPosThunk(void* user, float& outX, float& outY);
 private:
 	ICanPlayerMove* canPlayerMove = nullptr;
 

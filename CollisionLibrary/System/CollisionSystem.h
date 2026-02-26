@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Util/CollisionTypes.h"
-#include "Component/CollisionComponent.h"
 
 #include <vector>
 #include <unordered_map>
+
+class CollisionComponent;
 
 // todo: 기본 구현은 완료하였고, 추가로 충돌 처리를 하면 된다.
 class CollisionSystem

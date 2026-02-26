@@ -18,12 +18,10 @@ Player::Player()
 	: super(" P \n/|\\\n/ \\", Vector2::SpawnPoint, Color::Red), yPosition(position.y)
 {
 	sortingOrder = 10;
-	auto& cs = ScreenManager::Get().GetCollisionSystem();
-	collisionComponent = CollisionComponent(false, CollisionLayer::Player, GetLayerMask(CollisionLayer::Enemy) | GetLayerMask(CollisionLayer::Platform), width, height);
-	collisionPosition.x = position.x;
-	collisionPosition.y = position.y;
-	collisionComponent.OnEnable(cs, &collisionPosition);
-	cs.SetListener(collisionComponent.GetColliderID(), this, &Player::OnCollisionThunk);
+}
+
+Player::~Player()
+{
 }
 
 void Player::BeginPlay()
@@ -32,6 +30,22 @@ void Player::BeginPlay()
 	{
 		canPlayerMove = dynamic_cast<ICanPlayerMove*>(GetOwner());
 	}
+
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	auto mask = collisionComponent.MakeMask({ CollisionLayer::Enemy, CollisionLayer::Item });
+
+	collisionComponent = CollisionComponent(
+		false,
+		CollisionLayer::Player,
+		mask,
+		this,
+		&Player::GetPosThunk,
+		width,
+		height
+	);
+
+	collisionComponent.OnEnable(cs, &collisionPosition);
+	cs.SetListener(collisionComponent.GetColliderID(), this, &Player::OnCollisionThunk);
 }
 
 void Player::Tick(float deltaTime)
@@ -49,9 +63,7 @@ void Player::Tick(float deltaTime)
 		// 사망 모션 처리.
 		DeathMotion(deltaTime);
 		return;
-	}
-
-	
+	}	
 
 	Move(deltaTime);
 
@@ -68,7 +80,7 @@ void Player::Move(float deltaTime)
 			SetWeight(weight, deltaTime);
 		}
 		else {
-			weight = 0;
+			weight = 0; 
 			lastDir = true;
 		}
 
@@ -278,7 +290,12 @@ void Player::OnCollisionThunk(void* user, const CollisionEvent& e)
 	if (!self)
 		return;
 
+	// 이미 죽은 상태면 무시.
+	if (self->GetState() == Player::State::Death)
+		return;
+
 	auto& cs = ScreenManager::Get().GetCollisionSystem();
+
 	auto* other = static_cast<Actor*>(cs.GetListener(e.otherID));
 	if (cs.GetLayer(e.otherID) == CollisionLayer::Enemy)
 	{
@@ -286,6 +303,22 @@ void Player::OnCollisionThunk(void* user, const CollisionEvent& e)
 		auto* enemy = other->As<Enemy>();
 		self->GetOwner()->As<GameLevel>()->OnPlayerHitEnemy(enemy, isFalling);
 	}
+
+	if (cs.GetLayer(e.otherID) == CollisionLayer::Item)
+	{
+		auto* coin = other->As<Coin>();
+		self->GetOwner()->As<GameLevel>()->OnPlayerHitCoin(coin);
+		return;
+	}
+}
+
+void Player::GetPosThunk(void* user, float& outX, float& outY)
+{
+	auto* self = static_cast<Player*>(user);
+	if (!self)
+		return;
+	outX = self->position.x;
+	outY = self->position.y;
 }
 
 void Player::ClearMove(float deltaTime)
