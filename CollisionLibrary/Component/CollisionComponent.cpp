@@ -1,8 +1,8 @@
 #include "CollisionComponent.h"
 #include "System/CollisionSystem.h"
 
-CollisionComponent::CollisionComponent(const bool isTrigger, const CollisionLayer layer, const LayerMask mask, void* positionUser, PositionProvider positionProvider, std::uint32_t width, std::uint32_t height)
-	: isTrigger(isTrigger), collisionLayer(layer), mask(mask), box{width, height}, posUser(positionUser), posProvider(positionProvider)
+CollisionComponent::CollisionComponent(const bool isTrigger, const CollisionLayer layer, const LayerMask mask, std::uint32_t width, std::uint32_t height)
+	: isTrigger(isTrigger), collisionLayer(layer), mask(mask), box{width, height}
 {
 }
 

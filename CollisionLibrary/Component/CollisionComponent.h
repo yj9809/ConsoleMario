@@ -11,26 +11,15 @@ class CollisionSystem;
 class CollisionComponent
 {
 public:
-	using PositionProvider = void(*)(void* user, float& outX, float& outY);
-
-public:
 	CollisionComponent() = default;
 	CollisionComponent(
 		const bool isTrigger, 
 		const CollisionLayer layer,
 		const LayerMask mask, 
-		void* positionUser, 
-		PositionProvider positionProvider,
 		std::uint32_t width, 
 		std::uint32_t height);
 
 	void OnEnable(CollisionSystem& system, const Position* position);
-
-	void SetPositionProvider(void* user, PositionProvider provider)
-	{
-		posUser = user;
-		posProvider = provider;
-	}
 
 	void OnDisable(CollisionSystem& system);
 
@@ -79,8 +68,5 @@ private:
 
 	// 충돌 판정을 위한 박스 정보.
 	CollisionBox box{};
-
-	void* posUser = nullptr;
-	PositionProvider posProvider = nullptr;
 };
 

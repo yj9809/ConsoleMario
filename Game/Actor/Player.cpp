@@ -38,8 +38,6 @@ void Player::BeginPlay()
 		false,
 		CollisionLayer::Player,
 		mask,
-		this,
-		&Player::GetPosThunk,
 		width,
 		height
 	);
@@ -310,15 +308,6 @@ void Player::OnCollisionThunk(void* user, const CollisionEvent& e)
 		self->GetOwner()->As<GameLevel>()->OnPlayerHitCoin(coin);
 		return;
 	}
-}
-
-void Player::GetPosThunk(void* user, float& outX, float& outY)
-{
-	auto* self = static_cast<Player*>(user);
-	if (!self)
-		return;
-	outX = self->position.x;
-	outY = self->position.y;
 }
 
 void Player::ClearMove(float deltaTime)

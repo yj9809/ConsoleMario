@@ -43,8 +43,6 @@ void Enemy::BeginPlay()
 		false,
 		CollisionLayer::Enemy,
 		mask,
-		this,
-		&Enemy::GetPosThunk,
 		width, height);
 	component.OnEnable(cs, &collisionPosition);
 	cs.SetListener(component.GetColliderID(), this, nullptr);
@@ -118,13 +116,4 @@ bool Enemy::GroundCheck(int x, int y)
 		return true;
 	}
 	return false;
-}
-
-void Enemy::GetPosThunk(void* user, float& outX, float& outY)
-{
-	auto* self = static_cast<Enemy*>(user);
-	if (!self)
-		return;
-	outX = self->xPosition;
-	outY = self->yPosition;
 }

@@ -74,8 +74,6 @@ private:
 	void SyncCollisionPosition();
 
 	static void OnCollisionThunk(void* user, const CollisionEvent& e);
-	
-	static void GetPosThunk(void* user, float& outX, float& outY);
 
 private:
 	ICanPlayerMove* canPlayerMove = nullptr;

@@ -16,7 +16,6 @@ public:
 	inline bool GetIsDestroyed() const { return isDestroyed; }
 
 private:
-	static void GetPosThunk(void* user, float& outX, float& outY);
 
 private: 
 	bool isDestroyed = false;
