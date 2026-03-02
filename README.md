@@ -28,10 +28,10 @@
 
 ## Controls
 > 프로젝트에 맞게 실제 키로 수정하세요.
-- Move Left / Right: `A / D` (예시)
-- Jump: `Space` (예시)
-- Select / Confirm: `Enter` (예시)
-- Quit: `Esc` (예시)
+- Move Left / Right: `<- , ->` (방향키)
+- Jump: `Space`
+- Select / Confirm: `Enter`
+- Quit: `Esc`
 
 ---
 
@@ -41,12 +41,9 @@
 2. 실행 파일 실행
 
 ### Option B) Build from Source
-- IDE: Visual Studio (버전)
+- IDE: Visual Studio 2022/2026
 - Build: `x64 / Debug` 또는 `Release`
 - 실행: 빌드 후 생성된 exe 실행
-
-*(여기에 솔루션 파일/프로젝트 경로가 있다면 한 줄 추가해도 좋음)*
-
 ---
 
 ## Technical Highlights (What I solved)
@@ -58,12 +55,20 @@
 - 문제: 이동 플랫폼 위에서 플레이어가 함께 이동하지 않음
 - 해결: 플랫폼 이동량(delta)을 계산해 **플랫폼 위에 있을 때만 delta를 플레이어에 적용**
 
+### 3) Landing bug (Falling stuck)
+- 문제: 점프 후/단차 하강 후 **착지 판정이 간헐적으로 누락되어 Falling이 지속**됨
+- 해결: 바닥 감지 시 **Falling → Idle 복귀 + velocityY=0 초기화**, 수직 물리 **고정 스텝/서브스텝 충돌 검사**로 안정화
+
+### 4) Level transition crash (As<Coin>() access violation)
+- 문제: 맵 클리어 후 레벨 교체 시 **As<Coin>()에서 읽기 액세스 위반** 발생
+- 해결: `OnDestroy()`에서 **충돌 리스너/콜라이더 정리(ClearListener, OnDisable)** 를 강제해 **댕글링 포인터** 제거
+
 ---
 
 ## Architecture
-- GameLevel Tick에서 프레임 파이프라인을 따라 업데이트됩니다.  
-  `Input → Physics → Collision(X/Y) → State → Camera → Render`
-
+1) System Overview
+- Main에서 ScreenManager가 화면(메뉴/게임)을 관리하고, GameLevel이 게임 오브젝트(Player/Enemy)를 업데이트합니다.
+- 충돌은 CollisionSystem이 담당하며, 각 Actor는 자신의 CollisionComponent 정보를 기반으로 충돌을 등록/검사합니다.
 ```mermaid
 flowchart TD
   MAIN[Main] --> SM[ScreenManager]
@@ -73,3 +78,18 @@ flowchart TD
   GL --> E[Enemy]
   P --> CS
   E --> CS
+```
+
+2) Frame Pipeline
+
+- GameLevel Tick에서 아래 순서로 업데이트됩니다.
+Input → Physics → Collision(X/Y) → State → Camera → Render
+```mermaid
+flowchart TD
+  TICK[GameLevel Tick] --> INPUT[Input]
+  INPUT --> PHYSICS[Physics]
+  PHYSICS --> COLLISION[Collision (X/Y)]
+  COLLISION --> STATE[State Update]
+  STATE --> CAMERA[Camera]
+  CAMERA --> RENDER[Render]
+```
