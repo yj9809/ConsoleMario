@@ -16,8 +16,8 @@ public:
 	inline bool GetIsDestroyed() const { return isDestroyed; }
 
 private:
+	virtual void OnDestroy() override;
 
-private: 
 	bool isDestroyed = false;
 
 	CollisionComponent collisionComponent;

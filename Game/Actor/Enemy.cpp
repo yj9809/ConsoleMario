@@ -24,6 +24,17 @@ void Enemy::SetIsDestroyed()
 
 Enemy::~Enemy()
 {
+}
+
+void Enemy::OnDestroy()
+{
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	if (component.GetColliderID() != 0)
+	{
+		cs.ClearListener(component.GetColliderID());
+		component.OnDisable(cs);
+	}
+
 	super::OnDestroy();
 }
 

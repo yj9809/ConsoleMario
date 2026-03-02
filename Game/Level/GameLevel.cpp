@@ -247,7 +247,7 @@ bool GameLevel::CanMove(const Vector2& nextPosition)
 			const int ax = actor->GetPosition().x;
 			const int ay = actor->GetPosition().y;
 			const int aw = actor->GetWidth();
-			const int ah = 1; // MovePlatform은 2줄인데, Actor에 높이 getter가 없으면 1로만 체크
+			const int ah = actor->GetHeight();
 
 			const bool insideX = (nextPosition.x >= ax) && (nextPosition.x <= ax + aw - 1);
 			const bool insideY = (nextPosition.y >= ay) && (nextPosition.y <= ay + ah - 1);

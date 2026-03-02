@@ -57,6 +57,7 @@ public:
 private:
 	virtual void BeginPlay() override;
 	virtual void Tick(float deltaTime) override;
+	virtual void OnDestroy() override;
 
 	void Move(float deltaTime);
 	void MoveRight(float deltaTime);
@@ -97,7 +98,7 @@ private:
 	// 수직 속도 변수.
 	float velocityY = 0.0f;
 	// 점프 속도 변수.
-	float jumpSpeed = 40.0f;
+	float jumpSpeed = 45.0f;
 	// 중력 변수.
 	float gravity = 100.0f;
 

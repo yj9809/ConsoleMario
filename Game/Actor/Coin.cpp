@@ -29,3 +29,15 @@ void Coin::SetIsDestroyed()
 	cs.ClearListener(collisionComponent.GetColliderID());
 	collisionComponent.OnDisable(cs);
 }
+
+void Coin::OnDestroy()
+{
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	if (collisionComponent.GetColliderID() != 0)
+	{
+		cs.ClearListener(collisionComponent.GetColliderID());
+		collisionComponent.OnDisable(cs);
+	}
+
+	super::OnDestroy();
+}

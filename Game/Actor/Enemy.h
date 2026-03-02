@@ -21,6 +21,7 @@ public:
 private:
 	virtual void BeginPlay() override;
 	virtual void Tick(float deltaTime) override;
+	virtual void OnDestroy() override;
 
 	void Move(float deltaTime);
 

@@ -24,6 +24,18 @@ Player::~Player()
 {
 }
 
+void Player::OnDestroy()
+{
+	auto& cs = ScreenManager::Get().GetCollisionSystem();
+	if (collisionComponent.GetColliderID() != 0)
+	{
+		cs.ClearListener(collisionComponent.GetColliderID());
+		collisionComponent.OnDisable(cs);
+	}
+
+	super::OnDestroy();
+}
+
 void Player::BeginPlay()
 {
 	if (!canPlayerMove)
@@ -156,75 +168,117 @@ void Player::Jump(float deltaTime)
 	if (currentState == State::Idle)
 		return;
 
-	// 프레임마다 중력(가속도)을 속도에 누적한다.
-	// velocityY는 시간이 지날수록 증가하며(아래 방향), 상승 중(음수)에는 0으로 수렴하고
-	// 0을 지나 양수가 되면 자연스럽게 하강으로 전환된다.
-	if (currentState == State::Jumping)
+	// FPS 변화에 점프 높이가 흔들리지 않도록 고정 스텝으로 처리.
+	float remainTime = deltaTime;
+	const float physicsStep = 1.0f / 120.0f;
+
+	int timeSafety = 0;
+	while (remainTime > 0.0001f && timeSafety < 128)
 	{
-		velocityY += gravity * deltaTime;
-	}
-	else
-	{
-		velocityY += fallGravity * deltaTime;
-	}
+		float stepTime = remainTime > physicsStep ? physicsStep : remainTime;
+		remainTime -= stepTime;
+		++timeSafety;
 
-
-	// 상승에서 하강으로 전환.
-	if (currentState == State::Jumping && velocityY >= 0.0f)
-	{
-		currentState = State::Falling;
-	}
-
-	// 위치 업데이트.
-	yPosition += velocityY * deltaTime;
-
-	// 충돌 체크를 위한 다음 프레임의 좌측/우측 위치 계산.
-	Vector2 headLeft = Vector2((int)xPosition, (int)(yPosition));
-	Vector2 headRight = Vector2((int)(xPosition + width - 1), (int)(yPosition));
-	Vector2 pootLeft = Vector2((int)xPosition, (int)(yPosition + height - 1));
-	Vector2 pootRigth = Vector2((int)(xPosition + width - 1), (int)(yPosition + height - 1));
-
-	bool hitCeiling = !canPlayerMove->CanMove(headLeft) || !canPlayerMove->CanMove(headRight)
-		|| !canPlayerMove->CanMove(pootLeft) || !canPlayerMove->CanMove(pootRigth);
-
-	// 지면에 닿으면 위치/속도를 보정하고 점프 상태를 해제한다.
-	if (hitCeiling)
-	{
-		if (velocityY > 0.0f)
+		if (currentState == State::Jumping)
 		{
-			// 땅에 착지했으므로 위치 보정.
-			yPosition = position.y;
-			// 속도 초기화.
-			velocityY = 0.0f;
-			// 착지 후 점프 플래그 초기화.
-			currentState = State::Idle;
+			velocityY += gravity * stepTime;
 		}
 		else
 		{
-			// 천장에 부딪혔으므로 위치 보정.
-			yPosition = position.y;
-			// 속도 초기화.
-			velocityY = 0.0f;
-			// 천장에 부딪혔으므로 하강 상태로 전환.
+			velocityY += fallGravity * stepTime;
+		}
+
+		// 상승에서 하강으로 전환.
+		if (currentState == State::Jumping && velocityY >= 0.0f)
+		{
 			currentState = State::Falling;
+		}
+
+		float moveY = velocityY * stepTime;
+		if (moveY > 0.0f)
+		{
+			// 아래로 이동 시작 시 공중 상태로 둔다.
+			isGround = false;
+		}
+
+		float remainY = moveY;
+		int moveSafety = 0;
+		while (Util::Abs(remainY) > 0.0001f && moveSafety < 512)
+		{
+			float stepY = 0.0f;
+			if (remainY > 1.0f)
+			{
+				stepY = 1.0f;
+			}
+			else if (remainY < -1.0f)
+			{
+				stepY = -1.0f;
+			}
+			else
+			{
+				stepY = remainY;
+			}
+
+			float nextY = yPosition + stepY;
+
+			Vector2 headLeft = Vector2((int)xPosition, (int)(nextY));
+			Vector2 headRight = Vector2((int)(xPosition + width - 1), (int)(nextY));
+			Vector2 pootLeft = Vector2((int)xPosition, (int)(nextY + height - 1));
+			Vector2 pootRigth = Vector2((int)(xPosition + width - 1), (int)(nextY + height - 1));
+
+			bool blocked = false;
+			if (stepY < 0.0f)
+			{
+				blocked = !canPlayerMove->CanMove(headLeft) || !canPlayerMove->CanMove(headRight);
+			}
+			else
+			{
+				blocked = !canPlayerMove->CanMove(pootLeft) || !canPlayerMove->CanMove(pootRigth);
+			}
+
+			if (blocked)
+			{
+				if (stepY > 0.0f)
+				{
+					// 착지 시 상태/속도 동기화.
+					velocityY = 0.0f;
+					currentState = State::Idle;
+					isGround = true;
+				}
+				else
+				{
+					// 천장 충돌 시 하강 상태로 전환.
+					velocityY = 0.0f;
+					currentState = State::Falling;
+				}
+				break;
+			}
+
+			yPosition = nextY;
+			remainY -= stepY;
+			++moveSafety;
+		}
+
+		if (currentState == State::Idle)
+		{
+			break;
 		}
 	}
 
-	// 위치 업데이트.
 	SetPosition(Vector2(static_cast<int>(xPosition), static_cast<int>(yPosition)));
 	SyncCollisionPosition();
 }
 
 void Player::Fall()
 {
-	// 바닥 체크.
-	Vector2 LeftDownPosition = Vector2((int)xPosition, (int)(yPosition + height));
-	Vector2 RightDownPosition = Vector2((int)(xPosition + width - 1), (int)(yPosition + height));
+	// 렌더 기준 정수 좌표를 사용해 바닥 체크를 안정화.
+	Vector2 LeftDownPosition = Vector2(position.x, position.y + height);
+	Vector2 RightDownPosition = Vector2(position.x + width - 1, position.y + height);
 
 	isGround = canPlayerMove->IsOnGround(LeftDownPosition) || canPlayerMove->IsOnGround(RightDownPosition);
 
 	if (!isGround && currentState == State::Idle)
-	{ 
+	{
 		// 바닥에서 벗어났으므로 낙하 상태로 전환.
 		currentState = State::Falling;
 		velocityY = 0.0f;
@@ -258,6 +312,7 @@ void Player::ResetPosition()
 	SetPosition(Vector2::SpawnPoint);
 	xPosition = (float)position.x;
 	yPosition = (float)position.y;
+	SyncCollisionPosition();
 }
 
 void Player::AddPlatformMove(const Vector2& delta)
