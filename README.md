@@ -86,10 +86,10 @@ flowchart TD
 Input → Physics → Collision(X/Y) → State → Camera → Render
 ```mermaid
 flowchart TD
-  TICK[GameLevel Tick] --> INPUT[Input]
-  INPUT --> PHYSICS[Physics]
-  PHYSICS --> COLLISION[Collision (X/Y)]
-  COLLISION --> STATE[State Update]
-  STATE --> CAMERA[Camera]
-  CAMERA --> RENDER[Render]
+  TICK["GameLevel Tick"] --> INPUT["Input"]
+  INPUT --> PHYSICS["Physics"]
+  PHYSICS --> COLLISION["Collision (X/Y)"]
+  COLLISION --> STATE["State Update"]
+  STATE --> CAMERA["Camera"]
+  CAMERA --> RENDER["Render"]
 ```
