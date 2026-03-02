@@ -4,7 +4,7 @@
 **3개 스테이지(1-1 / 1-2 / 1-3) + 클리어까지** 이어지는 게임 루프를 완성했습니다.
 
 > 🎥 Gameplay: https://www.youtube.com/watch?v=IOTGzlAueAQ
-> 📦 Release: 
+> 📦 Release: https://github.com/yj9809/ConsoleMario/releases/tag/ConsoleMario
 
 ---
 
