@@ -4,6 +4,7 @@
 **3개 스테이지(1-1 / 1-2 / 1-3) + 클리어까지** 이어지는 게임 루프를 완성했습니다.
 
 > 🎥 Gameplay: https://www.youtube.com/watch?v=IOTGzlAueAQ
+
 > 📦 Release: https://github.com/yj9809/ConsoleMario/releases/tag/ConsoleMario
 
 ---
@@ -65,10 +66,10 @@
 
 ```mermaid
 flowchart TD
-  TICK[GameLevel Tick]
-  TICK --> INPUT[Input]
-  INPUT --> PHYSICS[Physics]
-  PHYSICS --> COLLISION[Collision X/Y]
-  COLLISION --> STATE[State Update]
-  STATE --> CAMERA[Camera]
-  CAMERA --> RENDER[Render]
+  MAIN[Main] --> SM[ScreenManager]
+  SM --> CS[CollisionSystem]
+  SM --> GL[GameLevel]
+  GL --> P[Player]
+  GL --> E[Enemy]
+  P --> CS
+  E --> CS
