@@ -21,7 +21,7 @@
 - **Tilemap 로딩(.txt)** 기반 스테이지 구성
 - **AABB 충돌**로 적/벽/코인 상호작용 구현
 - **X/Y 축 분리 충돌 처리**로 바닥·벽·천장 판정 안정화
-- **플레이어 상태 머신**(Idle/Run/Jump/Fall/Hit/Dead) 기반 동작 제어
+- **플레이어 상태 머신**(Idle/Jumping/Falling/Crash/Clear/Death) 기반 동작 제어
 - **스크롤 카메라** + **스테이지 전환** + **엔딩**
 
 ---
